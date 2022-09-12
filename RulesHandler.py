@@ -126,13 +126,13 @@ class RulesHandler:
                 program_line = 0
             program_line = program_line + 1
 
-    def apply_rule(self, program: Program, program_line: int, experimental_rules=False):
+    def apply_rule(self, program: Program, program_line: int, experimental_rules=False) -> bool:
         """
         Apply all possible rules to a certain point
         :param program: program to modify
         :param program_line: line of program to apply the rule
         :param experimental_rules: use experimental rules (marked with ¿?)
-        :return: None
+        :return: True if at least one rule could be applied, False if else
         """
         rule_applied = False
         if program_line == program.length() - 1:  # Last instruction
@@ -191,12 +191,12 @@ class RulesHandler:
         return (is_immediate(program, program.operand(program_line, 1))) and (
             is_register(program.operand(program_line + 1, 1)))
 
-    def rule1(self, program_line: int, program: Program):
+    def rule1(self, program_line: int, program: Program) -> bool:
         """
         PUSH Imm / POP Reg  <-->  MOV Reg,Imm
         :param program: program to modify
         :param program_line: line where the rule should be applied
-        :return: None
+        :return: True if rule can be applied, False if else
         """
         if self._rule1_check(program_line, program):
             new_line = ["mov", program.operand(program_line + 1, 1), program.operand(program_line, 1)]
@@ -212,12 +212,12 @@ class RulesHandler:
             is_register(program.operand(program_line + 1, 1))) and (
                        program.operand(program_line, 1) != program.operand(program_line + 1, 1))
 
-    def rule2(self, program_line: int, program: Program):
+    def rule2(self, program_line: int, program: Program) -> bool:
         """
         PUSH Reg / POP Reg2  <-->  MOV Reg2,Reg
         :param program: program to modify
         :param program_line: line where the rule should be applied
-        :return: None
+        :return: True if rule can be applied, False if else
         """
         if self._rule2_check(program_line, program):
             new_line = ["mov", program.operand(program_line + 1, 1), program.operand(program_line, 1)]
@@ -234,12 +234,12 @@ class RulesHandler:
                    is_immediate(program, program.operand(program_line + 1, 1))) and (
                        program.operand(program_line, 1) == program.operand(program_line + 1, 1))
 
-    def rule3(self, program_line: int, program: Program):
+    def rule3(self, program_line: int, program: Program) -> bool:
         """
         MOV Mem,Imm / PUSH Mem	<-->  PUSH Imm
         :param program: program to modify
         :param program_line: line where the rule should be applied
-        :return: None
+        :return: True if rule can be applied, False if else
         """
         if self._rule3_check(program_line, program):
             new_line = ["push", program.operand(program_line, 2)]
@@ -256,12 +256,12 @@ class RulesHandler:
                    is_memory_address(program.operand(program_line + 1, 1))) \
                and (program.operand(program_line, 1) == program.operand(program_line + 1, 1))
 
-    def rule4(self, program_line: int, program: Program):
+    def rule4(self, program_line: int, program: Program) -> bool:
         """
         MOV Mem,Reg / PUSH Mem   <-->  PUSH Reg
         :param program: program to modify
         :param program_line: line where the rule should be applied
-        :return: None
+        :return: True if rule can be applied, False if else
         """
         if self._rule4_check(program_line, program):
             new_line = ["push", program.operand(program_line, 2)]
@@ -279,12 +279,12 @@ class RulesHandler:
                        program.operand(program_line, 1) == program.operand(program_line + 1, 2)) and (
                        program.operand(program_line, 1) != program.operand(program_line + 1, 1))
 
-    def rule5(self, program_line: int, program: Program):
+    def rule5(self, program_line: int, program: Program) -> bool:
         """
         POP Mem2 / MOV Mem,Mem2	<-->  POP Mem
         :param program: program to modify
         :param program_line: line where the rule should be applied
-        :return: None
+        :return: True if rule can be applied, False if else
         """
         if self._rule5_check(program_line, program):
             new_line = ["pop", program.operand(program_line + 1, 1)]
@@ -301,12 +301,12 @@ class RulesHandler:
                    is_memory_address(program.operand(program_line + 1, 2))) and (
                        program.operand(program_line, 1) == program.operand(program_line + 1, 2))
 
-    def rule6(self, program_line: int, program: Program):
+    def rule6(self, program_line: int, program: Program) -> bool:
         """
         POP Mem / MOV Reg,Mem  <-->  POP Reg
         :param program: program to modify
         :param program_line: line where the rule should be applied
-        :return: None
+        :return: True if rule can be applied, False if else
         """
         if self._rule6_check(program_line, program):
             new_line = ["pop", program.operand(program_line + 1, 1)]
@@ -324,12 +324,12 @@ class RulesHandler:
                    is_memory_address(program.operand(program_line + 1, 2))) and (
                        program.operand(program_line, 1) == program.operand(program_line + 1, 2))
 
-    def rule7(self, program_line: int, program: Program):
+    def rule7(self, program_line: int, program: Program) -> bool:
         """
         MOV Mem,Imm / OP Reg,Mem  <-->  OP Reg,Imm
         :param program: program to modify
         :param program_line: line where the rule should be applied
-        :return: None
+        :return: True if rule can be applied, False if else
         """
         if self._rule7_check(program_line, program):
             new_line = [program.instruction(program_line + 1), program.operand(program_line + 1, 1),
@@ -348,12 +348,12 @@ class RulesHandler:
                    is_memory_address(program.operand(program_line + 1, 2))) and (
                        program.operand(program_line, 1) == program.operand(program_line + 1, 2))
 
-    def rule8(self, program_line: int, program: Program):
+    def rule8(self, program_line: int, program: Program) -> bool:
         """
         MOV Mem2,Mem / OP Reg,Mem2  <-->  OP Reg,Mem
         :param program: program to modify
         :param program_line: line where the rule should be applied
-        :return: None
+        :return: True if rule can be applied, False if else
         """
         if self._rule8_check(program_line, program):
             new_line = [program.instruction(program_line + 1), program.operand(program_line + 1, 1),
@@ -371,12 +371,12 @@ class RulesHandler:
                    is_memory_address(program.operand(program_line + 1, 1))) and (
                        program.operand(program_line, 1) == program.operand(program_line + 1, 1))
 
-    def rule9(self, program_line: int, program: Program):
+    def rule9(self, program_line: int, program: Program) -> bool:
         """
         POP Mem / PUSH Mem  <-->  NOP
         :param program: program to modify
         :param program_line: line where the rule should be applied
-        :return: None
+        :return: True if rule can be applied, False if else
         """
         if self._rule9_check(program_line, program):
             program.delete(program_line)
@@ -391,12 +391,12 @@ class RulesHandler:
                    is_memory_address(program.operand(program_line + 1, 1))) and (
                        program.operand(program_line, 1) == program.operand(program_line + 1, 1))
 
-    def rule10(self, program_line: int, program: Program):
+    def rule10(self, program_line: int, program: Program) -> bool:
         """
         MOV Mem,Reg / CALL Mem  <-->  CALL Reg
         :param program: program to modify
         :param program_line: line where the rule should be applied
-        :return: None
+        :return: True if rule can be applied, False if else
         """
         if self._rule10_check(program_line, program):
             call_type = program.instruction(program_line + 1)
@@ -414,12 +414,12 @@ class RulesHandler:
                    is_memory_address(program.operand(program_line + 1, 1))) and (
                        program.operand(program_line, 1) == program.operand(program_line + 1, 1))
 
-    def rule11(self, program_line: int, program: Program):
+    def rule11(self, program_line: int, program: Program) -> bool:
         """
         MOV Mem2,Mem / CALL Mem2  <-->  CALL Mem
         :param program: program to modify
         :param program_line: line where the rule should be applied
-        :return: None
+        :return: True if rule can be applied, False if else
         """
         if self._rule11_check(program_line, program):
             call_type = program.instruction(program_line + 1)
@@ -438,12 +438,12 @@ class RulesHandler:
                    is_memory_address(program.operand(program_line + 1, 1))) and (
                        program.operand(program_line, 1) == program.operand(program_line + 1, 1))
 
-    def rule12(self, program_line: int, program: Program):
+    def rule12(self, program_line: int, program: Program) -> bool:
         """
         MOV Mem,Reg / JMP Mem  <-->  JMP Reg
         :param program: program to modify
         :param program_line: line where the rule should be applied
-        :return: None
+        :return: True if rule can be applied, False if else
         """
         if self._rule12_check(program_line, program):
             new_line = ["jmp", program.operand(program_line, 2)]
@@ -457,12 +457,12 @@ class RulesHandler:
     def _rule13_check(self, program_line: int, program: Program) -> bool:
         return program.instruction(program_line + 1) == "ret" and is_register(program.operand(program_line, 1))
 
-    def rule13(self, program_line: int, program: Program):
+    def rule13(self, program_line: int, program: Program) -> bool:
         """
         PUSH Reg / RET  <-->  JMP Reg
         :param program: program to modify
         :param program_line: line where the rule should be applied
-        :return: None
+        :return: True if rule can be applied, False if else
         """
         if self._rule13_check(program_line, program):
             new_line = ["jmp", program.operand(program_line, 1)]
@@ -480,12 +480,12 @@ class RulesHandler:
                    is_memory_address(program.operand(program_line + 1, 1))) and (
                        program.operand(program_line, 1) == program.operand(program_line + 1, 1))
 
-    def rule14(self, program_line: int, program: Program):
+    def rule14(self, program_line: int, program: Program) -> bool:
         """
         MOV Mem2,Mem / JMP Mem2  <-->  JMP Mem
         :param program: program to modify
         :param program_line: line where the rule should be applied
-        :return: None
+        :return: True if rule can be applied, False if else
         """
         if self._rule14_check(program_line, program):
             new_line = ["jmp", program.operand(program_line, 2)]
@@ -502,12 +502,12 @@ class RulesHandler:
                    is_memory_address(program.operand(program_line + 1, 1))) and (
                        program.operand(program_line, 1) == program.operand(program_line + 1, 1))
 
-    def rule15(self, program_line: int, program: Program):
+    def rule15(self, program_line: int, program: Program) -> bool:
         """
         POP Mem / JMP Mem  <-->  RET
         :param program: program to modify
         :param program_line: line where the rule should be applied
-        :return: None
+        :return: True if rule can be applied, False if else
         """
         if self._rule15_check(program_line, program):
             new_line = ["ret"]
@@ -522,12 +522,12 @@ class RulesHandler:
         return (program.instruction(program_line) == "xor") and (is_register(program.operand(program_line, 1))) and (
                 program.operand(program_line, 1) == program.operand(program_line, 2))
 
-    def rule16(self, program_line: int, program: Program):
+    def rule16(self, program_line: int, program: Program) -> bool:
         """
         XOR Reg1, Reg1 <---> MOV Reg1, 0
         :param program: program to modify
         :param program_line: line where the rule should be applied
-        :return: None
+        :return: True if rule can be applied, False if else
         """
         if self._rule16_check(program_line, program):
             new_line = ["mov", program.operand(program_line, 1), 0]
@@ -542,14 +542,14 @@ class RulesHandler:
                 ((program.instruction(program_line) == "je") and (program.instruction(program_line + 1) == "jne")) or
                 ((program.instruction(program_line) == "jne") and (program.instruction(program_line + 1) == "je")))
 
-    def rule17(self, program_line: int, program: Program):
+    def rule17(self, program_line: int, program: Program) -> bool:
         """
         JE Reg / JNE Reg <---> JMP Reg
         or
         JNE Reg / JE Reg <---> JMP Reg
         :param program: program to modify
         :param program_line: line where the rule should be applied
-        :return: None
+        :return: True if rule can be applied, False if else
         """
         if self._rule17_check(program_line, program):
             new_line = ["jmp", program.operand(program_line, 1)]
@@ -565,14 +565,14 @@ class RulesHandler:
                 ((program.instruction(program_line) == "jl") and (program.instruction(program_line + 1) == "jge")) or
                 ((program.instruction(program_line) == "jge") and (program.instruction(program_line + 1) == "jl")))
 
-    def rule18(self, program_line: int, program: Program):
+    def rule18(self, program_line: int, program: Program) -> bool:
         """
         JL Reg / JGE Reg <---> JMP Reg
         or
         JGE Reg / JL Reg <---> JMP Reg
         :param program: program to modify
         :param program_line: line where the rule should be applied
-        :return: None
+        :return: True if rule can be applied, False if else
         """
         if self._rule18_check(program_line, program):
             new_line = ["jmp", program.operand(program_line, 1)]
@@ -588,14 +588,14 @@ class RulesHandler:
                 ((program.instruction(program_line) == "jg") and (program.instruction(program_line + 1) == "jle")) or
                 ((program.instruction(program_line) == "jle") and (program.instruction(program_line + 1) == "jg")))
 
-    def rule19(self, program_line: int, program: Program):
+    def rule19(self, program_line: int, program: Program) -> bool:
         """
         JG Reg / JLE Reg <---> JMP Reg
         or
         JLE Reg / JG Reg <---> JMP Reg
         :param program: program to modify
         :param program_line: line where the rule should be applied
-        :return: None
+        :return: True if rule can be applied, False if else
         """
         if self._rule19_check(program_line, program):
             new_line = ["jmp", program.operand(program_line, 1)]
@@ -611,12 +611,12 @@ class RulesHandler:
             is_register(program.operand(program_line, 2))) and \
                (program.operand(program_line, 1) == program.operand(program_line + 1, 1))
 
-    def rule20(self, program_line: int, program: Program):
+    def rule20(self, program_line: int, program: Program) -> bool:
         """
         MOV Reg,Reg2 / PUSH Reg  <---> PUSH Reg2
         :param program: program to modify
         :param program_line: line where the rule should be applied
-        :return: None
+        :return: True if rule can be applied, False if else
         """
         if self._rule20_check(program_line, program):
             new_line = ["push", program.operand(program_line, 2)]
@@ -633,12 +633,12 @@ class RulesHandler:
                    is_register(program.operand(program_line + 1, 1))) and \
                (program.operand(program_line, 1) == program.operand(program_line + 1, 2))
 
-    def rule21(self, program_line: int, program: Program):
+    def rule21(self, program_line: int, program: Program) -> bool:
         """
         MOV Reg,Imm / OP Reg2,Reg <--> OP Reg2,Imm
         :param program: program to modify
         :param program_line: line where the rule should be applied
-        :return: None
+        :return: True if rule can be applied, False if else
         """
         if self._rule21_check(program_line, program):
             new_line = [program.instruction(program_line + 1), program.operand(program_line + 1, 1),
@@ -655,12 +655,12 @@ class RulesHandler:
             is_register(program.operand(program_line, 2))) and \
                (program.operand(program_line, 1) == program.operand(program_line + 1, 1))
 
-    def rule22(self, program_line: int, program: Program):
+    def rule22(self, program_line: int, program: Program) -> bool:
         """
         MOV Reg2,Reg / CALL Reg2 <--> CALL Reg
         :param program: program to modify
         :param program_line: line where the rule should be applied
-        :return: None
+        :return: True if rule can be applied, False if else
         """
         if self._rule22_check(program_line, program):
             call_type = program.instruction(program_line + 1)
@@ -678,12 +678,12 @@ class RulesHandler:
                    is_register(program.operand(program_line, 2))) and (
                        program.operand(program_line, 1) == program.operand(program_line + 1, 1))
 
-    def rule23(self, program_line: int, program: Program):
+    def rule23(self, program_line: int, program: Program) -> bool:
         """
         MOV Reg2,Reg / JMP Reg2  <-->  JMP Reg
         :param program: program to modify
         :param program_line: line where the rule should be applied
-        :return: None
+        :return: True if rule can be applied, False if else
         """
         if self._rule23_check(program_line, program):
             new_line = ["jmp", program.operand(program_line, 2)]
@@ -699,12 +699,12 @@ class RulesHandler:
             is_register(program.operand(program_line + 1, 1))) and (
                        program.operand(program_line, 1) == program.operand(program_line + 1, 2))
 
-    def rule24(self, program_line: int, program: Program):
+    def rule24(self, program_line: int, program: Program) -> bool:
         """
         POP Reg / MOV Reg2,Reg  <-->  POP Reg2
         :param program: program to modify
         :param program_line: line where the rule should be applied
-        :return: None
+        :return: True if rule can be applied, False if else
         """
         if self._rule24_check(program_line, program):
             new_line = ["pop", program.operand(program_line + 1, 1)]
@@ -720,12 +720,12 @@ class RulesHandler:
             is_register(program.operand(program_line, 1))) and (
                        program.operand(program_line, 1) == program.operand(program_line + 1, 1))
 
-    def rule25(self, program_line: int, program: Program):
+    def rule25(self, program_line: int, program: Program) -> bool:
         """
         POP Reg / PUSH Reg <--> NOP
         :param program: program to modify
         :param program_line: line where the rule should be applied
-        :return: None
+        :return: True if rule can be applied, False if else
         """
         if self._rule25_check(program_line, program):
             program.delete(program_line)
@@ -740,12 +740,12 @@ class RulesHandler:
                    is_register(program.operand(program_line + 1, 1))) and (
                        program.operand(program_line, 1) == program.operand(program_line + 1, 1))
 
-    def rule26(self, program_line: int, program: Program):
+    def rule26(self, program_line: int, program: Program) -> bool:
         """
         POP Reg / JMP Reg <--> RET
         :param program: program to modify
         :param program_line: line where the rule should be applied
-        :return: None
+        :return: True if rule can be applied, False if else
         """
         if self._rule26_check(program_line, program):
             new_line = ["ret"]
