@@ -1,35 +1,45 @@
-PUSH rules
+PUSH RULES
+
 1   PUSH Imm / POP Reg  <-->  MOV Reg,Imm
 2   PUSH Reg / POP Reg2  <-->  MOV Reg2,Reg
 13  PUSH Reg / RET  <-->  JMP Reg
 
-MOV rules
+MOV RULES
+
 3   MOV Mem,Imm / PUSH Mem	<-->  PUSH Imm
 4   MOV Mem,Reg / PUSH Mem   <-->  PUSH Reg
-20  MOV Reg,Reg2 / PUSH Reg  <--> PUSH Reg2 ¿?
+E1  MOV Reg,Reg2 / PUSH Reg  <--> PUSH Reg2 ¿?
+
 7   MOV Mem,Imm / OP Reg,Mem  <-->  OP Reg,Imm
 8   MOV Mem2,Mem / OP Reg,Mem2  <-->  OP Reg,Mem
-21  MOV Reg, Imm / OP Reg2,Reg <--> OP Reg2,Imm ¿?
+E2  MOV Reg, Imm / OP Reg2,Reg <--> OP Reg2,Imm ¿?
+
 10  MOV Mem,Reg / CALL Mem  <-->  CALL Reg
 11  MOV Mem2,Mem / CALL Mem2  <-->  CALL Mem
-22  MOV Reg2,Reg / CALL Reg2 <--> CALL Reg ¿?
+E3  MOV Reg2,Reg / CALL Reg2 <--> CALL Reg ¿?
+
 12  MOV Mem,Reg / JMP Mem  <-->  JMP Reg
 14  MOV Mem2,Mem / JMP Mem2  <-->  JMP Mem
-23  MOV Reg2,Reg / JMP Reg2  <-->  JMP Reg ¿?
+E4  MOV Reg2,Reg / JMP Reg2  <-->  JMP Reg ¿?
 
-POP rules
+POP RULES
+
 5   POP Mem2 / MOV Mem,Mem2	<-->  POP Mem
 6   POP Mem / MOV Reg,Mem  <-->  POP Reg
-24  POP Reg / MOV Reg2,Reg  <-->  POP Reg2 ¿?
-9   POP Mem / PUSH Mem  <-->  NOP
-25  POP Reg / PUSH Reg <--> NOP
-15  POP Mem / JMP Mem  <-->  RET
-26  POP Reg / JMP Reg <--> RET ¿?
+E5  POP Reg / MOV Reg2,Reg  <-->  POP Reg2 ¿?
 
-CONDITIONAL BRANCH rules
+9   POP Mem / PUSH Mem  <-->  NOP
+20  POP Reg / PUSH Reg <--> NOP
+
+15  POP Mem / JMP Mem  <-->  RET
+E6  POP Reg / JMP Reg <--> RET ¿?
+
+CONDITIONAL BRANCH RULES
+
 17  JE Reg / JNE Reg <---> JMP Reg
 18  JL Reg / JGE Reg <---> JMP Reg
 19  JG Reg / JLE Reg <---> JMP Reg
 
-ARITHMETIC rules
+ARITHMETIC RULES
+
 16  XOR Reg1, Reg1 <---> MOV Reg1, 0

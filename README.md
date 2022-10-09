@@ -7,14 +7,17 @@ Input file must have a "_start" tag at the beginning of code. Currently, .data s
 Use:
 
 ```bash
-python main.py <code_to_compress> <att_output>
+python main.py -h -i -t -f file -o name
 ```
 
-- code_to_compress: input code
-- att_output: output code in att format (1=TRUE)
+- -h or --help to display this guide\
+- -i or --intel_output to write the output file in intel syntax (ATT syntax is selected by default).
+- -t or --tag_replacement to use an experimental substitution of tags to line number while applying rules.
+- -f or --file to specify input file. If not specified, it will use examples/passwddump.txt as input.
+- -o or --output to specify name of output file. If not specified, it will be < file >-compressed.< extension >.
 
 For example:
 
 ```bash
-python main.py $FileDir$\examples\passwddump.txt 1
+python main.py -i --file=examples\passwddump.txt -o examples\test.txt
 ```

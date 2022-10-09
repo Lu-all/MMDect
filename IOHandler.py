@@ -71,6 +71,13 @@ def read_program(name: str, tag_replace_to_numbers: bool) -> Program:
             num_line = -1
             for line in program_file:
                 if header_skipped:
+                    has_comment = line.find('#')
+                    if has_comment == 0:
+                        continue
+                    elif has_comment > 0:
+                        line = line.split("#")[0].strip()
+                    if line.isspace() or line.__len__() == 0:
+                        continue
                     num_line = num_line + 1
                     line = line.replace(",", " ")
                     line = line.replace("\t", " ")

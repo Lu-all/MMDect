@@ -1,6 +1,4 @@
-from __future__ import annotations
-
-from typing import Union
+from typing import Union, Optional
 
 
 class Program:
@@ -54,7 +52,7 @@ class Program:
         except IndexError:
             return None
 
-    def instruction(self, program_line: int) -> str | None:
+    def instruction(self, program_line: int) -> Optional[str]:
         """
         Return instruction of program line
         :param program_line: number of line (integer) to extract the instruction
@@ -65,7 +63,7 @@ class Program:
         except IndexError:
             return None
 
-    def operand(self, program_line: int, num_of_operand: int) -> str | None:
+    def operand(self, program_line: int, num_of_operand: int) -> Optional[str]:
         """
         Return operand of program line
         :param program_line: number of line (integer) to extract the operand
