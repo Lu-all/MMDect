@@ -48,7 +48,7 @@ type("call", call).
 type("syscall", call).
 
 reg(X) :- type(X, reg).
-imm(X) :- number(X); var(X), random_between(0, 0xffff, X).
+imm(X) :- nonvar(X), number_string(XN, X), number(XN); var(X), random_between(0, 0xffff, XN), number_string(XN, X).
 operation(X) :- type(X, operation).
 conditional_branch(X) :- type(X, conditional_branch).
 branch(X) :- type(X, branch).
@@ -58,6 +58,54 @@ mem(X) :- nonvar(X), imm(X), !, fail.
 mem(X) :- nonvar(X), reg(X), !, fail.
 mem(X) :- nonvar(X), string_chars(X, X1), length(X1, L), nth0(0, X1, '['), nth1(L, X1, ']') ; var(X), random_between(0x1000, 0xffff, B), number_chars(B, B1), append(['['],B1, X1), append(X1, [']'], X2), string_chars(X, X2).
 
+% funciones
+
+% Get all possible rules applicable
+% Use: possible_rules(["push", "4"], ["pop", "rax"], 1).
+possible_rules(Line1, Line2, R) :-
+    r1(Line1, Line2, _S), append([], 1, R);
+    r2(Line1, Line2, _S), append([], 2, R);
+    r3(Line1, Line2, _S), append([], 3, R);
+    r4(Line1, Line2, _S), append([], 4, R);
+    r5(Line1, Line2, _S), append([], 5, R);
+    r6(Line1, Line2, _S), append([], 6, R);
+    r7(Line1, Line2, _S), append([], 7, R);
+    r8(Line1, Line2, _S), append([], 8, R);
+    r9(Line1, Line2, _S), append([], 9, R);
+    r10(Line1, Line2, _S), append([], 10, R);
+    r11(Line1, Line2, _S), append([], 11, R);
+    r12(Line1, Line2, _S), append([], 12, R);
+    r13(Line1, Line2, _S), append([], 13, R);
+    r14(Line1, Line2, _S), append([], 14, R);
+    r15(Line1, Line2, _S), append([], 15, R);
+    r16(Line1, Line2, _S), append([], 16, R);
+    r17(Line1, Line2, _S), append([], 17, R);
+    r18(Line1, Line2, _S), append([], 18, R);
+    r19(Line1, Line2, _S), append([], 19, R).
+
+% Apply all possible rules to a program point
+% Use: apply_rules(["push", "4"], ["pop", "rax"], ["mov", "rax", "4"]).
+apply_rules(Line1, Line2, S) :-
+    r1(Line1, Line2, S);
+    r2(Line1, Line2, S);
+    r3(Line1, Line2, S);
+    r4(Line1, Line2, S);
+    r5(Line1, Line2, S);
+    r6(Line1, Line2, S);
+    r7(Line1, Line2, S);
+    r8(Line1, Line2, S);
+    r9(Line1, Line2, S);
+    r10(Line1, Line2, S);
+    r11(Line1, Line2, S);
+    r12(Line1, Line2, S);
+    r13(Line1, Line2, S);
+    r14(Line1, Line2, S);
+    r15(Line1, Line2, S);
+    r16(Line1, Line2, S);
+    r17(Line1, Line2, S);
+    r18(Line1, Line2, S);
+    r19(Line1, Line2, S).
+
 % reglas
 
 %%%%%%%%%%%%%%%%
@@ -65,31 +113,31 @@ mem(X) :- nonvar(X), string_chars(X, X1), length(X1, L), nth0(0, X1, '['), nth1(
 %%%%%%%%%%%%%%%%
 % regla 1
 % PUSH Imm / POP Reg  <-->  MOV Reg,Imm
-% Use: r1(["push", 4], ["pop", "rax"], ["mov", "rax", 4]).
+% Use: r1(["push", "4"], ["pop", "rax"], ["mov", "rax", "4"]).
 r1([Push, Imm], [Pop, Reg], [Mov, Reg, Imm]) :-
     Push = "push", Pop = "pop", Mov = "mov",
     imm(Imm), reg(Reg).
-                                             
+
 % regla 2
 % PUSH Reg / POP Reg2  <-->  MOV Reg2,Reg
 % Use: r2(["push", "rbx"], ["pop", "rax"], ["mov", "rax", "rbx"]).
 r2([Push, Reg], [Pop, Reg2], [Mov, Reg2, Reg]) :-
     Push = "push", Pop = "pop", Mov = "mov",
-    reg(Reg), reg(Reg2).         
+    reg(Reg), reg(Reg2).
 
 % regla 13
 % PUSH Reg / RET  <-->  jmp Reg
 % Use: r13(["push", "rax"], ["ret"], ["jmp", "rax"]).
 r13([Push, Reg], [Ret], [Jmp, Reg]) :-
     Push = "push", Ret = "ret",Jmp = "jmp",
-    reg(Reg).      
+    reg(Reg).
 
 %%%%%%%%%%%%%%%
 %% MOV rules %%
 %%%%%%%%%%%%%%%
 % regla 3
 % MOV Mem,Imm / PUSH Mem	<-->  PUSH Imm
-% Use: r3(["mov", "[1]", 4], ["push", "[1]"], ["push", 4]).
+% Use: r3(["mov", "[1]", "4"], ["push", "[1]"], ["push", "4"]).
 r3([Mov, Mem, Imm], [Push, Mem], [Push, Imm]) :-
     Mov = "mov", Push = "push", Push = "push",
     mem(Mem), imm(Imm).
@@ -97,13 +145,13 @@ r3([Mov, Mem, Imm], [Push, Mem], [Push, Imm]) :-
 % regla 4
 % MOV Mem,Reg / PUSH Mem   <-->  PUSH Reg
 % Use: r4(["mov", "[1]", "rax"], ["push", "[1]"], ["push", "rax"]).
-r3([Mov, Mem, Reg], [Push, Mem], [Push, Reg]) :-
+r4([Mov, Mem, Reg], [Push, Mem], [Push, Reg]) :-
     Mov = "mov", Push = "push",
     mem(Mem), reg(Reg).
 
 % regla 7
 % MOV Mem,Imm / OP Reg,Mem  <-->  OP Reg,Imm
-% Use: r7(["mov", "[1]", 4], ["add", "rax", "[1]"], ["add", "rax", 4]).
+% Use: r7(["mov", "[1]", "4"], ["add", "rax", "[1]"], ["add", "rax", "4"]).
 r7([Mov, Mem, Imm], [OP, Reg, Mem], [OP, Reg, Imm]) :-
     Mov = "mov", operation(OP),
     mem(Mem), reg(Reg), imm(Imm).
@@ -167,10 +215,10 @@ r9([Pop, Mem], [Push, Mem], [Nop]) :-
     Push = "push", Pop = "pop", Nop = "nop",
     mem(Mem).
 
-% regla 20
+% regla 19
 % POP Reg / PUSH Reg <--> NOP
-% Use: r20(["pop", "rax"], ["push", "rax"], ["nop"]).
-r20([Pop, Reg], [Push, Reg], [Nop]) :-
+% Use: r19(["pop", "rax"], ["push", "rax"], ["nop"]).
+r19([Pop, Reg], [Push, Reg], [Nop]) :-
     Push = "push", Pop = "pop", Nop = "nop",
     reg(Reg).
 
@@ -184,36 +232,28 @@ r15([Pop, Mem], [Jmp, Mem], [Ret]) :-
 %%%%%%%%%%%%%%%%%%%%%%%
 %% COND_BRANCH rules %%
 %%%%%%%%%%%%%%%%%%%%%%%
-% regla 17
+% regla 16
 % JE Reg / JNE Reg <---> JMP Reg
-% Use: r17(["je", "rax"], ["jne", "rax"], ["jmp", "rax"]).
-r17([Je, Reg], [Jne, Reg], [Jmp, Reg]) :-
+% Use: r16(["je", "rax"], ["jne", "rax"], ["jmp", "rax"]).
+r16([Je, Reg], [Jne, Reg], [Jmp, Reg]) :-
     Jmp = "jmp", reg(Reg),
     ((   Jne = "je", Je = "jne");
     (    Jne = "jne",Je = "je" )).
 
-% regla 18
+% regla 17
 % JL Reg / JGE Reg <---> JMP Reg
-% Use: r18(["jl", "rax"], ["jge", "rax"], ["jmp", "rax"]).
-r18([Jl, Reg], [Jge, Reg], [Jmp, Reg]) :-
+% Use: r17(["jl", "rax"], ["jge", "rax"], ["jmp", "rax"]).
+r17([Jl, Reg], [Jge, Reg], [Jmp, Reg]) :-
     Jmp = "jmp", reg(Reg),
     ((   Jge = "jl", Jl = "jge");
     (    Jge = "jge",Jl = "jl" )).
 
-% regla 19
+% regla 18
 % JG Reg / JLE Reg <---> JMP Reg
-% Use: r19(["jg", "rax"], ["jle", "rax"], ["jmp", "rax"]).
-r19([Jg, Reg], [Jle, Reg], [Jmp, Reg]) :-
+% Use: r18(["jg", "rax"], ["jle", "rax"], ["jmp", "rax"]).
+r18([Jg, Reg], [Jle, Reg], [Jmp, Reg]) :-
     Jmp = "jmp", reg(Reg),
     ((   Jle = "jg", Jg = "jle");
     (    Jle = "jle",Jg = "jg" )).
 
-%%%%%%%%%%%%%%%%%%%%%%
-%% ARITHMETIC rules %%
-%%%%%%%%%%%%%%%%%%%%%%
-% regla 16
-% XOR Reg, Reg <---> MOV Reg1, 0
-% Use: r16(["xor", "rax", "rax"], ["mov", "rax", 0]).
-r16([Xor, Reg, Reg], [Mov, Reg, Imm]) :-
-    Xor = "xor", Mov = "mov",
-    reg(Reg), Imm = 0.
+

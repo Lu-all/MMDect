@@ -10,5 +10,5 @@ def compress_program(program: Program) -> Program:
     """
 
     rule_handler = RulesHandler()
-    rule_handler.apply_all_rules(program)
+    rule_handler.apply_all_rules_global(program)
     return program

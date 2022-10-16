@@ -29,17 +29,13 @@ POP RULES
 E5  POP Reg / MOV Reg2,Reg  <-->  POP Reg2 ¿?
 
 9   POP Mem / PUSH Mem  <-->  NOP
-20  POP Reg / PUSH Reg <--> NOP
+19  POP Reg / PUSH Reg <--> NOP
 
 15  POP Mem / JMP Mem  <-->  RET
 E6  POP Reg / JMP Reg <--> RET ¿?
 
 CONDITIONAL BRANCH RULES
 
-17  JE Reg / JNE Reg <---> JMP Reg
-18  JL Reg / JGE Reg <---> JMP Reg
-19  JG Reg / JLE Reg <---> JMP Reg
-
-ARITHMETIC RULES
-
-16  XOR Reg1, Reg1 <---> MOV Reg1, 0
+16  JE Reg / JNE Reg <---> JMP Reg
+17  JL Reg / JGE Reg <---> JMP Reg
+18  JG Reg / JLE Reg <---> JMP Reg
