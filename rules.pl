@@ -109,9 +109,6 @@ mem(X) :-
 %%%%%%%%%%%
 
 % Matrix of str <-> Array of Functors
-parser(X, Y):-
-    var(X),var(Y),!.
-
 parser([], []).
 
 parser([X|Xs], [Y|Ys]) :-
