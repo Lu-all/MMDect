@@ -1,54 +1,7 @@
 %%%%%%%%%%
 %Examples%
 %%%%%%%%%%
-program([['mov', 'r12', '0x6477737361702FFF'],
- ['shr', 'r12', '8'],
- ['mov', '[r13]', 'r12'],
- ['push', '[r13]'],
- ['mov', 'r12', '0xFFFFFFFF6374652F'],
- ['shl', 'r12', '32'],
- ['push', 'r12'],
- ['mov', 'rdi', 'rsp'],
- ['add', 'rdi', '4'],
- ['xor', 'rsi', 'rsi'],
- ['xor', 'rdx', 'rdx'],
- ['pop', 'r15'],
- ['push', 'r15'],
- ['push', '0x2'],
- ['pop', 'rax'],
- ['syscall'],
- ['push', 'rax'],
- ['pop', 'r12'],
- ['mov', 'r13', '0x100'],
- ['sub', 'rsp', 'r13'],
- ['loop_read:'],
- ['mov', 'rdi', 'r12'],
- ['mov', 'rsi', 'rsp'],
- ['mov', 'rdx', 'r13'],
- ['xor', 'rax', 'rax'],
- ['syscall'],
- ['xor', 'r14', 'r14'],
- ['cmp', 'rax', 'r14'],
- ['je', 'close_file'],
- ['mov', 'rdx', 'rax'],
- ['mov', 'r14', '0x1'],
- ['mov', 'rdi', '0x1'],
- ['mov', 'rsi', 'rsp'],
- ['mov', 'rax', '0x1'],
- ['syscall'],
- ['cmp', 'rax', 'r14'],
- ['je', 'loop_read'],
- ['jne', 'loop_read'],
- ['close_file:'],
- ['mov', 'rdi', 'r12'],
- ['mov', 'r14', '0x1'],
- ['mov', 'rax', 'r14'],
- ['syscall'],
- ['xor', 'rdi', 'rdi'],
- ['mov', 'r14', '0x3c'],
- ['mov', 'rax', 'r14'],
- ['syscall']]).
-
+ 
 test([
 [mov, '[123]','0x6477737361702FFF'],
 [push, '[123]'],
@@ -92,16 +45,16 @@ reg(r15).
 
 % IMM
 
-imm(X) :-
+imm(X) :- 
     nonvar(X), atom_number(X, XN), number(XN).
-imm(X) :-
+imm(X) :- 
     var(X), random_between(0, 0xffff, XN), atom_number(X, XN).
 
 % MEM
 
-mem(X) :-
+mem(X) :- 
     nonvar(X), string_chars(X, X1), length(X1, L), nth0(0, X1, '['), nth1(L, X1, ']').
-mem(X) :-
+mem(X) :- 
     var(X), random_between(0x1000, 0xffff, B), number_chars(B, B1), append(['['],B1, X1), append(X1, [']'], X2), atom_chars(X, X2).
 
 %%%%%%%%%%%
@@ -118,52 +71,97 @@ parser([X|Xs], [Y|Ys]) :-
 
 % Array is input
 % Once Tail is deduced, Head & Body are resolved
-append(_Head,[],[],[]).
-append(Head,Body,Tail, Array) :-
+cut(Head,Body,Tail, Array) :- 
     append(Extra, Tail, Array),
     append(Head,Body,Extra).
 
 % Array is output
 % Once Head & Body are merged, Tail is merged too.
-substitute(_Head,[],[],[]).
-substitute(Head,Body,Tail, Array) :-
+substitute(Head,Body,Tail, Array) :- 
     append(Head,Body,Extra),
     append(Extra, Tail, Array).
 
-% Try to apply any rule possible
-apply_rules(Head, Body, Tail,Program) :-
-    rule(_X,Body, Result),
-    substitute(Head,Result,Tail,Program).
-
-% No possibilities left
-rules([], _Program).
-
-% Try to apply rule and go on with rest of possibilities
-rules([Cut|_Cuts], Program) :-
-    nth1(1,Cut,Head),
-    nth1(2,Cut,Body),
-    nth1(3,Cut,Tail),
-    apply_rules(Head, Body, Tail, Program).
-
-% No rules applicable, go on with rest of possibilities
-rules([_Cut|Cuts], Program) :-
-    rules(Cuts, Program).
-
+% Function by Daniel Lyons
+without_last([_], []).
+without_last([X|Xs], [X|WithoutLast]) :- 
+    without_last(Xs, WithoutLast).
+	
 %%%%%%%
 %Rules%
 %%%%%%%
 
 rule(1, [push(Imm), pop(Reg)], [mov(Reg, Imm)]) :- imm(Imm), reg(Reg).
-rule(2, [push(Reg), pop(Reg2)], [mov(Reg2, Reg)]) :- reg(Reg), reg(Reg1).
 rule(3, [mov(Mem, Imm), push(Mem)], [push(Imm)]) :- mem(Mem), imm(Imm).
 
 %%%%%%
 %Main%
 %%%%%%
+    
+main(Result) :-
+	test(Program),
+	parser(Program,Parsed), % Parse to Functors
+	rules([], Parsed, [], Result). % Apply rules
+    parser(Result,Applied). % Parse to matrix
+	
 
-main(P,R) :-
-	parser(P,Parsed), % Parse to Functors
-    setof([Head,Body,Tail],(append(Head, Body, Tail, Parsed)),Cuts), % Get all possibilities of append
- 	rules(Cuts,Applied), % Apply rules
-    ((   length(Applied,L), L < 1, R=P, !); % Rule applied, parse to matrix
-    parser(R,Applied)). % No rule applied
+get_content(Program_before, N, Content) :-
+    length(Program_before, LP),
+	((
+    	LP < 1, Content = N
+    )
+    ;   
+    (   
+		nth1(LP,Program_before,C1), append([C1],[N],Content)
+    )).
+    
+apply_rule(Program_before, Result, Program_next, Applied_before, New_program_before, New_applied_before) :-
+    without_last(Program_before, Pbl),
+    substitute(Pbl, Result, Program_next, New_applied),
+    ((   
+        member(New_applied, Applied_before), New_applied_before = Applied_before
+    )
+    ;
+    (
+        append(Applied_before, [New_applied], New_applied_before)
+    )),
+    append(Pbl, Result, New_program_before).
+    
+ignore_rule(Program_before, N, Program_next, Applied_before, New_program_before, New_applied_before) :-
+	substitute(Program_before, [N], Program_next, New_applied),
+    ((
+        member(New_applied, Applied_before),
+        New_applied_before = Applied_before
+	)
+	;
+	(
+        append(Applied_before, [New_applied], New_applied_before)
+	)),
+    append(Program_before, [N], New_program_before).
+
+rules(_,[],Applied_before, R) :-
+    R = Applied_before.
+
+rules(Program_before, [N|Program_next], Applied_before, R) :-
+	get_content(Program_before, N, Content),
+    (	
+		rule(_, Content, Result),
+        (
+        (    %Applies rule
+              apply_rule(Program_before, Result, Program_next, Applied_before, New_program_before, New_applied_before),
+              rules(New_program_before, Program_next, New_applied_before, R)
+        )
+        ;
+       	(   %Ignores rule
+              ignore_rule(Program_before, N, Program_next, Applied_before, New_program_before, New_applied_before),
+              rules(New_program_before, Program_next, New_applied_before, R)
+        )
+        )
+	)
+    ;   
+    (
+		% Cannot Apply rule
+		ignore_rule(Program_before, N, Program_next, Applied_before, New_program_before, New_applied_before),
+		rules(New_program_before, Program_next, New_applied_before, R)
+    ).
+    
+    
