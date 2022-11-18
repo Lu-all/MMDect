@@ -73,7 +73,8 @@ re_parser([], []).
 re_parser(X, Y):-
     length(Y, 1),
     nth0(0,Y,Y1),
-    parser(X, Y1).
+    parser(X1, Y1),
+    append([], [X1], X).
 
 re_parser([X|Xs], [Y|Ys]) :-
 	re_parser(Xs, Ys),
@@ -81,14 +82,14 @@ re_parser([X|Xs], [Y|Ys]) :-
 
 % Array is input
 % Once Tail is deduced, Head & Body are resolved
-cut(Head,Body,Tail, Array) :- 
+cut(Head,Body,Tail, Array) :-
     append(Extra, Tail, Array),
     append(Head,Body,Extra),
     length(Body, L), L > 0.
 
 % Array is output
 % Once Head & Body are merged, Tail is merged too.
-substitute(Head,Body,Tail, Array) :- 
+substitute(Head,Body,Tail, Array) :-
     append(Head,Body,Extra),
     append(Extra, Tail, Array).
 
@@ -101,7 +102,7 @@ filter_result([R|Not_filtered_result], Result):-
 filter_result([R|Not_filtered_result], Result):-
     filter_result(Not_filtered_result, New_result),
     append(New_result, [R], Result).
-    
+
 all_in_one([], []).
 
 all_in_one([L|Bag], Unified):-
@@ -110,7 +111,7 @@ all_in_one([L|Bag], Unified):-
 
 % Daniel Lyons
 without_last([_], []).
-without_last([X|Xs], [X|WithoutLast]) :- 
+without_last([X|Xs], [X|WithoutLast]) :-
     without_last(Xs, WithoutLast).
 
 get_content(Program_before, N, Content) :-
@@ -118,8 +119,8 @@ get_content(Program_before, N, Content) :-
 	((
     	LP < 1, Content = N
      )
-     ;   
-     (   
+     ;
+     (
 		nth1(LP,Program_before,C1), append([C1],[N],Content)
      )).
 
@@ -134,8 +135,8 @@ rule(9, [push(Mem), pop(Mem)], []) :- mem(Mem).
 %%%%%%
 %Main%
 %%%%%%
-    
-    
+
+
 main(Program, Result) :-
 	parser(Program,Parsed), % Parse to Functors
 	setof(R, rules([], Parsed, [], R), Bag), % Apply rules
