@@ -138,15 +138,15 @@ rule(9, [push(Mem), pop(Mem)], []) :- mem(Mem).
     
 main(Program, Result) :-
 	parser(Program,Parsed), % Parse to Functors
-	findall(R, rules([], Parsed, [], R), Bag), % Apply rules
+	setof(R, rules([], Parsed, [], R), Bag), % Apply rules
     all_in_one(Bag,Not_filtered_result),
     filter_result(Not_filtered_result, Applied),
     re_parser(Result,Applied), !. % Parse to matrix
-    
+
 apply_rule(Program_before, Result, Program_next, Applied_before, New_program_before, New_applied_before) :-
       without_last(Program_before, Pbl),
       substitute(Pbl, Result, Program_next, New_applied),
-      ((   
+      ((
           member(New_applied, Applied_before), New_applied_before = Applied_before
       )
       ;
@@ -154,7 +154,7 @@ apply_rule(Program_before, Result, Program_next, Applied_before, New_program_bef
           append(Applied_before, [New_applied], New_applied_before)
       )),
       append(Pbl, Result, New_program_before).
-    
+
 ignore_rule(Program_before, N, Program_next, Applied_before, New_program_before, New_applied_before) :-
 	substitute(Program_before, [N], Program_next, New_applied),
     ((
@@ -172,9 +172,9 @@ rules(_,[],Applied_before, R) :-
 
 rules(Program_before, [N|Program_next], Applied_before, R) :-
 	get_content(Program_before, N, Content),
-    (	
+    (
 		rule(_, Content, Result),
-        (   	
+        (
         		%Apply rule
         		apply_rule(Program_before, Result, Program_next, Applied_before, New_program_before, New_applied_before);
         		%Ignore rule
@@ -182,16 +182,15 @@ rules(Program_before, [N|Program_next], Applied_before, R) :-
         ),
         rules(New_program_before, Program_next, New_applied_before, R)
 	)
-    ;   
+    ;
     (
 		% Cannot Apply rule
 		ignore_rule(Program_before, N, Program_next, Applied_before, New_program_before, New_applied_before),
 		rules(New_program_before, Program_next, New_applied_before, R)
     ).
-    
-    
+
+
 
 /** <examples>
-?- re_parser(A,[[push('0x6477737361702FFF'), pop('[123]'), mov(r12,'12'), mov(r13,'13'), mov(r12,'0xFFFFFFFF6374652F')], [push('0x6477737361702FFF'), pop('[123]'), push('12'), pop(r12), mov(r13,'13'), mov(r12,'0xFFFFFFFF6374652F')], [mov('[123]','0x6477737361702FFF'), push('[123]'), pop('[123]'), push('12'), pop(r12), mov(r13,'13'), mov(r12,'0xFFFFFFFF6374652F')], [mov('[123]','0x6477737361702FFF'), mov(r12,'12'), mov(r13,'13'), mov(r12,'0xFFFFFFFF6374652F')], [mov('[123]','0x6477737361702FFF'), push('12'), pop(r12), mov(r13,'13'), mov(r12,'0xFFFFFFFF6374652F')], [mov('[123]','0x6477737361702FFF'), push('[123]'), pop('[123]'), mov(r12,'12'), mov(r13,'13'), mov(r12,'0xFFFFFFFF6374652F')]])
 ?- test(P), main(P, R).
 */
