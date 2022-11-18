@@ -5,6 +5,7 @@
 test([
 [mov, '[123]','0x6477737361702FFF'],
 [push, '[123]'],
+[pop, '[123]'],      
 [push, '12'],
 [pop, 'r12'],
 [mov, r13, '13'],
@@ -68,12 +69,22 @@ parser([X|Xs], [Y|Ys]) :-
 	parser(Xs, Ys),
 	Y =.. X.
 
+re_parser([], []).
+re_parser(X, Y):-
+    length(Y, 1),
+    nth0(0,Y,Y1),
+    parser(X, Y1).
+
+re_parser([X|Xs], [Y|Ys]) :-
+	re_parser(Xs, Ys),
+    parser(X,Y).
 
 % Array is input
 % Once Tail is deduced, Head & Body are resolved
 cut(Head,Body,Tail, Array) :- 
     append(Extra, Tail, Array),
-    append(Head,Body,Extra).
+    append(Head,Body,Extra),
+    length(Body, L), L > 0.
 
 % Array is output
 % Once Head & Body are merged, Tail is merged too.
@@ -81,50 +92,68 @@ substitute(Head,Body,Tail, Array) :-
     append(Head,Body,Extra),
     append(Extra, Tail, Array).
 
-% Function by Daniel Lyons
+filter_result([], []).
+
+filter_result([R|Not_filtered_result], Result):-
+    member(R, Not_filtered_result),
+    filter_result(Not_filtered_result, Result).
+
+filter_result([R|Not_filtered_result], Result):-
+    filter_result(Not_filtered_result, New_result),
+    append(New_result, [R], Result).
+    
+all_in_one([], []).
+
+all_in_one([L|Bag], Unified):-
+    all_in_one(Bag, New_unified),
+    append(New_unified, L, Unified).
+
+% Daniel Lyons
 without_last([_], []).
 without_last([X|Xs], [X|WithoutLast]) :- 
     without_last(Xs, WithoutLast).
-	
+
+get_content(Program_before, N, Content) :-
+    length(Program_before, LP),
+	((
+    	LP < 1, Content = N
+     )
+     ;   
+     (   
+		nth1(LP,Program_before,C1), append([C1],[N],Content)
+     )).
+
 %%%%%%%
 %Rules%
 %%%%%%%
 
 rule(1, [push(Imm), pop(Reg)], [mov(Reg, Imm)]) :- imm(Imm), reg(Reg).
 rule(3, [mov(Mem, Imm), push(Mem)], [push(Imm)]) :- mem(Mem), imm(Imm).
+rule(9, [push(Mem), pop(Mem)], []) :- mem(Mem).
 
 %%%%%%
 %Main%
 %%%%%%
     
-main(Result) :-
-	test(Program),
+    
+main(Program, Result) :-
 	parser(Program,Parsed), % Parse to Functors
-	rules([], Parsed, [], Result). % Apply rules
-    parser(Result,Applied). % Parse to matrix
-	
-
-get_content(Program_before, N, Content) :-
-    length(Program_before, LP),
-	((
-    	LP < 1, Content = N
-    )
-    ;   
-    (   
-		nth1(LP,Program_before,C1), append([C1],[N],Content)
-    )).
+	findall(R, rules([], Parsed, [], R), Bag), % Apply rules
+    all_in_one(Bag,Not_filtered_result),
+    filter_result(Not_filtered_result, Applied),
+    re_parser(Result,Applied), !. % Parse to matrix
     
 apply_rule(Program_before, Result, Program_next, Applied_before, New_program_before, New_applied_before) :-
-    without_last(Program_before, Pbl),
-    substitute(Pbl, Result, Program_next, New_applied),
-    ((   
-        member(New_applied, Applied_before), New_applied_before = Applied_before
-    )
-    ;
-    (
-        append(Applied_before, [New_applied], New_applied_before)
-    )),
-    append(Pbl, Result, New_program_before).
+      without_last(Program_before, Pbl),
+      substitute(Pbl, Result, Program_next, New_applied),
+      ((   
+          member(New_applied, Applied_before), New_applied_before = Applied_before
+      )
+      ;
+      (
+          append(Applied_before, [New_applied], New_applied_before)
+      )),
+      append(Pbl, Result, New_program_before).
     
 ignore_rule(Program_before, N, Program_next, Applied_before, New_program_before, New_applied_before) :-
 	substitute(Program_before, [N], Program_next, New_applied),
@@ -145,17 +174,13 @@ rules(Program_before, [N|Program_next], Applied_before, R) :-
 	get_content(Program_before, N, Content),
     (	
 		rule(_, Content, Result),
-        (
-        (    %Applies rule
-              apply_rule(Program_before, Result, Program_next, Applied_before, New_program_before, New_applied_before),
-              rules(New_program_before, Program_next, New_applied_before, R)
-        )
-        ;
-       	(   %Ignores rule
-              ignore_rule(Program_before, N, Program_next, Applied_before, New_program_before, New_applied_before),
-              rules(New_program_before, Program_next, New_applied_before, R)
-        )
-        )
+        (   	
+        		%Apply rule
+        		apply_rule(Program_before, Result, Program_next, Applied_before, New_program_before, New_applied_before);
+        		%Ignore rule
+            	ignore_rule(Program_before, N, Program_next, Applied_before, New_program_before, New_applied_before)
+        ),
+        rules(New_program_before, Program_next, New_applied_before, R)
 	)
     ;   
     (
@@ -165,3 +190,8 @@ rules(Program_before, [N|Program_next], Applied_before, R) :-
     ).
     
     
+
+/** <examples>
+?- re_parser(A,[[push('0x6477737361702FFF'), pop('[123]'), mov(r12,'12'), mov(r13,'13'), mov(r12,'0xFFFFFFFF6374652F')], [push('0x6477737361702FFF'), pop('[123]'), push('12'), pop(r12), mov(r13,'13'), mov(r12,'0xFFFFFFFF6374652F')], [mov('[123]','0x6477737361702FFF'), push('[123]'), pop('[123]'), push('12'), pop(r12), mov(r13,'13'), mov(r12,'0xFFFFFFFF6374652F')], [mov('[123]','0x6477737361702FFF'), mov(r12,'12'), mov(r13,'13'), mov(r12,'0xFFFFFFFF6374652F')], [mov('[123]','0x6477737361702FFF'), push('12'), pop(r12), mov(r13,'13'), mov(r12,'0xFFFFFFFF6374652F')], [mov('[123]','0x6477737361702FFF'), push('[123]'), pop('[123]'), mov(r12,'12'), mov(r13,'13'), mov(r12,'0xFFFFFFFF6374652F')]])
+?- test(P), main(P, R).
+*/
