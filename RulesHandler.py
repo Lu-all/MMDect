@@ -111,14 +111,14 @@ class RulesHandler:
         else:
             return []
 
-    def apply_all_rules_global(self, program: Program):
+    def apply_all_rules_global(self, program: Program, experimental_rules=False):
         """
         Apply all possible rules
         :return: None
         """
         program_line = 0
         while program_line < program.length():
-            if self.apply_rules(program=program, program_line=program_line):
+            if self.apply_rules(program=program, program_line=program_line, experimental_rules=experimental_rules):
                 program_line = 0
             program_line = program_line + 1
 

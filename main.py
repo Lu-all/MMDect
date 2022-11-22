@@ -18,6 +18,7 @@ def merubacc_help():
 
 
 example_path = "examples/passwddump.txt"
+python_exec = False
 att_syntax = True
 tag_replacement = False
 default_output = True
@@ -27,17 +28,20 @@ command_args = sys.argv[1:]
 options: list[tuple[str, str]] = [('-f', example_path)]
 arguments: list[str] = [example_path]
 try:
-    options, arguments = getopt.getopt(command_args, "hitf:o:",
-                                       ["help", "intel_output", "tag_replacement", "file=", "output="])
+    options, arguments = getopt.getopt(command_args, "hpitf:o:",
+                                       ["help", "python", "intel_output", "tag_replacement", "file=", "output="])
 except getopt.GetoptError as error:
     print(error)
     exit(2)
 for option, argument in options:
     if option in ['-h', '--help']:
         merubacc_help()
+    elif option in ['-p', '--python']:
+        python_exec = True
     elif option in ['-i', '--intel_output']:
         att_syntax = False
     elif option in ['-t', '--tag_replacement']:
+        python_exec = True
         tag_replacement = True
     elif option in ['-f', '--file']:
         name = str(argument)
@@ -48,11 +52,14 @@ if exists(name):
     name_without_extension = name.split('.')[0]
     extension = name.split('.')[-1]
     program = read_program(name=name, tag_replace_to_numbers=tag_replacement)
-    program = compress_program(program)
-    if default_output:
-        name_output = name_without_extension + "-compressed." + extension
-    write_program(name=name_output, att_syntax=att_syntax,
-                  program=program, use_tag_replacement=tag_replacement)
+    programs = compress_program(program=program, python_exec=python_exec, tag_replacement=tag_replacement)
+    num_program = 0
+    for program in programs:
+        if default_output:
+            name_output = name_without_extension + "-compressed." + extension
+        write_program(name=name_output + "-" + str(num_program), att_syntax=att_syntax,
+                      program=program, use_tag_replacement=tag_replacement)
+        num_program = num_program + 1
     exit(0)
 else:
     print("Input file does not exist or is not specified. Check -f or --file argument and try again.")

@@ -9,6 +9,14 @@ class Program:
         self.tags = []
         self.num_tags = []
 
+    def copy(self):
+        new_program = Program()
+        new_program.header = self.header
+        new_program.to_replace = self.to_replace
+        new_program.tags = self.tags
+        new_program.num_tags = self.num_tags
+        return new_program
+
     def length(self) -> int:
         """
         Return total length of program (without header)
