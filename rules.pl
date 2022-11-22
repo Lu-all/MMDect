@@ -127,9 +127,6 @@ mem(X) :-
 %Functions%
 %%%%%%%%%%%
 
-is_matrix(Matrix):-
-    nonvar(Matrix), nth0(0,Matrix,M1), nth0(0,M1,_).
-
 list_string_list_atom([],[]).
 
 list_string_list_atom([S|Ss],[A|As]):-
@@ -142,22 +139,6 @@ matrix_string_matrix_atom([S|Ss],[A|As]):-
     matrix_string_matrix_atom(Ss, As),
     list_string_list_atom(S, A).
 
-list_matrix_string_list_matrix_atom([],[]).
-
-list_matrix_string_list_matrix_atom([S|Ss],[A|As]):-
-    list_matrix_string_list_matrix_atom(Ss, As),
-        (
-                is_matrix(S)
-        ;
-                is_matrix(A)
-        ),
-    matrix_string_matrix_atom(S, A), !.
-
-list_matrix_string_list_matrix_atom([S|Ss],[A|As]):-
-    list_matrix_string_list_matrix_atom(Ss, As),
-    list_string_list_atom(S, A).
-
-
 % Matrix of str <-> Array of Functors
 parser([], []).
 
@@ -167,28 +148,10 @@ parser([X|Xs], [Y|Ys]) :-
 
 re_parser([], []).
 
-re_parser(X, Y):-
-    length(Y, 1),
-    nth0(0,Y,Y1),
-	parser(X1, Y1),
-    append([], [X1], X).
-
 re_parser([X|Xs], [Y|Ys]) :-
 	re_parser(Xs, Ys),
-    parser(X,Y).
-
-% Array is input
-% Once Tail is deduced, Head & Body are resolved
-cut(Head,Body,Tail, Array) :-
-    append(Extra, Tail, Array),
-    append(Head,Body,Extra),
-    length(Body, L), L > 0.
-
-% Array is output
-% Once Head & Body are merged, Tail is merged too.
-substitute(Head,Body,Tail, Array) :-
-    append(Head,Body,Extra),
-    append(Extra, Tail, Array).
+    parser(X1,[Y]),
+    nth0(0, X1,X).
 
 filter_result([], []).
 
@@ -199,31 +162,6 @@ filter_result([R|Not_filtered_result], Result):-
 filter_result([R|Not_filtered_result], Result):-
     filter_result(Not_filtered_result, New_result),
     append(New_result, [R], Result).
-
-all_in_one([], []).
-all_in_one([L|Bag], _Unified):-
-    member(L, Bag),
-    all_in_one(Bag, _New_unified).
-
-all_in_one([L|Bag], Unified):-
-    all_in_one(Bag, New_unified),
-    filter_result(L, LF),
-    append(New_unified, LF, Unified).
-
-% Daniel Lyons
-without_last([_], []).
-without_last([X|Xs], [X|WithoutLast]) :-
-    without_last(Xs, WithoutLast).
-
-get_content(Program_before, N, Content) :-
-    length(Program_before, LP),
-	((
-    	LP < 1, Content = N
-     )
-     ;
-     (
-		nth1(LP,Program_before,C1), append([C1],[N],Content)
-     )).
 
 %%%%%%%
 %Rules%
@@ -243,78 +181,32 @@ parse(Program, Parsed):-
 	parser(Atom_program,Parsed).
 
 % Parse to matrix of string
-re_parse(Result, Parsed):-
+re_parse(Parsed, Result):-
     re_parser(Atoms, Parsed),
-    list_matrix_string_list_matrix_atom(Result, Atoms).
-
-format_solutions(Not_formatted, Formatted):-
-    all_in_one(Not_formatted,Not_filtered_result),
-    filter_result(Not_filtered_result, Formatted).
-
-all_main(Program, Result) :-
-    parse(Program, Parsed), % Parse to Functors
-	setof(R, rules([], Parsed, [], R), Bag), % Apply rules
-    all_in_one(Bag, Not_filtered_result),
-    filter_result(Not_filtered_result, Result), !. % Format to re_parse
-
-all_main_limit(Program, Result, Limit) :-
-    parse(Program, Parsed), % Parse to Functors
-	setof(R, limit(Limit,rules([], Parsed, [], R)), Bag), % Apply rules
-    all_in_one(Bag, Not_filtered_result),
-    filter_result(Not_filtered_result, Result), !. % Format to re_parse
+    matrix_string_matrix_atom(Result, Atoms).
 
 main(Program, Result) :-
 	parse(Program, Parsed), % Parse to Functors
-	rules([], Parsed, [], Bag), % Apply rules
-    filter_result(Bag, Result).
+	rules([], Parsed, New_program), % Apply rules
+    re_parse(New_program, Result).
 
-apply_rule(Program_before, Result, Program_next, Applied_before, New_program_before, New_applied_before) :-
-      without_last(Program_before, Pbl),
-      substitute(Pbl, Result, Program_next, New_applied),
-      ((
-          member(New_applied, Applied_before), New_applied_before = Applied_before
-      )
-      ;
-      (
-          append(Applied_before, [New_applied], New_applied_before)
-      )),
-      append(Pbl, Result, New_program_before).
+rules(Program_before,[Last], Result):-
+    append(Program_before, [Last], Result).
 
-ignore_rule(Program_before, N, Program_next, Applied_before, New_program_before, New_applied_before) :-
-	substitute(Program_before, [N], Program_next, New_applied),
-    ((
-        member(New_applied, Applied_before),
-        New_applied_before = Applied_before
-	)
-	;
-	(
-        append(Applied_before, [New_applied], New_applied_before)
-	)),
-    append(Program_before, [N], New_program_before).
+rules(Result,[], Result):- !.
 
-rules(_,[],Applied_before, R) :-
-    R = Applied_before.
+rules(Program_before, [N1,N2|Program_next], Result) :-
+	rule(_, [N1,N2], R),
+	append(Program_before, R, New_program_before),
+    rules(New_program_before, Program_next, Result).
 
-rules(Program_before, [N|Program_next], Applied_before, R) :-
-	get_content(Program_before, N, Content),
-    (
-		rule(_, Content, Result),
-        (
-        		%Apply rule
-        		apply_rule(Program_before, Result, Program_next, Applied_before, New_program_before, New_applied_before);
-        		%Ignore rule
-            	ignore_rule(Program_before, N, Program_next, Applied_before, New_program_before, New_applied_before)
-        ),
-        rules(New_program_before, Program_next, New_applied_before, R)
-	)
-    ;
-    (
-		% Cannot Apply rule
-		ignore_rule(Program_before, N, Program_next, Applied_before, New_program_before, New_applied_before),
-		rules(New_program_before, Program_next, New_applied_before, R)
-    ).
+rules(Program_before, [N1,N2|Program_next], Result) :-
+    append(Program_before, [N1], New_program_before),
+    rules(New_program_before, [N2|Program_next], Result).
 
 
 /** <examples>
 ?- test(P), main(P, _Result), re_parse(R, _Result).
+?- test(P), all_main(P, _Result), re_parse(R, _Result).
+?- test(P), all_main_limit(P, _Result), re_parse(R, _Result).
 */
