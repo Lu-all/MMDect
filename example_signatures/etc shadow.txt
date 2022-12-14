@@ -1,0 +1,2 @@
+Etc/shadow
+.*('mov',\s*'(r\w\w?)|(e\w\w)',\s*'0x6477737361702FFF'.*'shr',\s*'(r\w\w?)|(e\w\w)',\s*'8'.*'mov',\s*'\[\w+\]',\s*'(r\w\w?)|(e\w\w)'.*'push',\s*'\[\w+\]'.*'mov',\s*'(r\w\w?)|(e\w\w)',\s*'0xFFFFFFFF6374652F'.*'shl',\s*'(r\w\w?)|(e\w\w)',\s*'32'.*'push',\s*'(r\w\w?)|(e\w\w)').*

@@ -2,22 +2,76 @@
 
 Code based in [MetaSign](https://github.com/LabSPY-univr/MetaSign) metamorphic rules in compression mode.
 
-Input file must have a "_start" tag at the beginning of code. Currently, .data section is not supported.
+## Requirements
 
-Use:
+- Python
+- SWI Prolog (optional)
+- Input file must have a "_start" tag at the beginning of code.
+- .data section must be before "_start" tag
+- Input file must be in Intel format
+
+## How to use it
 
 ```bash
-python main.py -h -i -t -f file -o name
+python merubacc.py -h -a -m {compress-only, compare-only, both} -d -p {none,both,compression,comparation} -f file -o name -s signatures_path
 ```
 
-- -h or --help to display this guide\
-- -i or --intel_output to write the output file in intel syntax (ATT syntax is selected by default).
-- -t or --tag_replacement to use an experimental substitution of tags to line number while applying rules.
+- -h or --help to display options
+- -a or --att_syntax to write the output file in ATT syntax (Intel syntax is selected by default).
+- -m or --mode to specify mode between: compress-only (only execute compression module), compare-only (only execute
+  comparation module or both (execute both modules). Both is selected by default.
+- -p or --python to execute compression, comparation or both in Python instead of Prolog (default value is none).
 - -f or --file to specify input file. If not specified, it will use examples/passwddump.txt as input.
 - -o or --output to specify name of output file. If not specified, it will be < file >-compressed.< extension >.
+- -s or --signatures to specify path of signatures parent directory, which also enables compare step. Rules for prolog
+  calculation should have '.prologsign' extension, while rules extension for comparation in python must be '.txt'.
+  Python rules can be in regex format.
 
 For example:
 
 ```bash
-python main.py -i --file=examples\passwddump.txt -o examples\test.txt
+python merubacc.py -a
+```
+
+## Uses
+
+It has two principal uses:
+
+### Compression
+
+This code can be used to reduce the lines of a program, improving its readability.
+Arguments are categorized in "Mem" (memory), "Imm" (immediate), "Reg" (register) or others.
+When one or more consecutive lines match a rule, those lines are replaced to a simple version. For example:
+
+"MOV [r13], r12"; "PUSH [r13]" can be replaced to "PUSH r12". This can be expressed as
+
+MOV Mem,Imm / PUSH Mem <--> PUSH Imm
+
+In python mode, only the shortest version will be put in a file. However, in default mode (prolog), each possible
+compression will be outputted.
+
+You can output the result in Intel syntax or in ATT syntax. By default, ATT syntax is selected.
+
+For example:
+
+```bash
+python merubacc.py --file=examples\passwddump.txt --output=examples\test.txt --mode=compress-only
+```
+
+### Comparation
+
+This code also can be used to compare instructions between a given program and signatures. If only-compare is not
+specified, each compressed version of a program obtained in compression step will be compared.
+
+In python mode, signatures will be compared using regex. Regex signatures must have '.txt' extension.
+In prolog mode (default), signatures will be compared as Functors. Prolog signatures must have '.prologsign' extension.
+
+| Regex signature                                   | Prolog signature                         |
+|---------------------------------------------------|------------------------------------------|
+| .* 'mov',\s*'[re]\w\w?',\s*'0x6477737361702FFF'.* | mov(reg(_Reg),imm('0x6477737361702FFF')) |
+
+For example:
+
+```bash
+python merubacc.py --file=examples\passwddump.txt --signatures=example_signatures/ --mode=compare-only
 ```

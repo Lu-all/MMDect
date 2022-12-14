@@ -1,5 +1,6 @@
-from Program import Program
-from utils import is_operation, is_conditional_branch, is_instruction, is_immediate, is_register, is_memory_address
+from internal_functions.program import Program
+from internal_functions.utils import is_operation, is_conditional_branch, is_instruction, is_immediate, is_register, \
+    is_memory_address
 
 
 class RulesHandler:

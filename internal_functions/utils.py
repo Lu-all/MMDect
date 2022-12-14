@@ -1,4 +1,6 @@
-from Program import Program
+import re
+
+from internal_functions.program import Program
 
 
 def get_registers():
@@ -106,3 +108,13 @@ def is_immediate(program: Program, operand):
     """
     return not is_register(operand) and not is_memory_address(operand) and not is_tag(program,
                                                                                       operand)
+
+
+def reformat_signatures(signatures: list[list[str]]) -> str:
+    new_signatures = []
+    for content in signatures:
+        new_signatures.append(content)
+    content = re.sub(r'\'\[(\d*)]\'', r'meminit \1 memfin', str(new_signatures))
+    content = content.replace('"', "").replace("'", "").replace(",,", ",")
+    new_signatures = re.sub(r'meminit (\d*) memfin', r"'[\1]'", content)
+    return str(new_signatures)
