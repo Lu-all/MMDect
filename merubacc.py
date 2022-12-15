@@ -2,7 +2,7 @@ import getopt
 import sys
 from os.path import exists
 
-from internal_functions.IOHandler import read_program, write_program, get_signatures
+from internal_functions.IOHandler import read_program, write_program
 from rules.modeHandler import compress_program, compress_and_compare_program, compare_program
 
 
@@ -23,6 +23,8 @@ def merubacc_help() -> None:
 
           "-p or --python to execute compression, comparation or both in python instead of prolog\n"
 
+          "-r or --regex to enable both Regex and Prolog comparation. This option overwrites -p / --python argument.\n"
+
           "-f or --file to specify input file. If not specified, it will use examples/passwddump.txt as input\n"
 
           "-o or --output to specify name of output file. If not specified, it will be <file>-compressed.<extension>\n"
@@ -33,10 +35,11 @@ def merubacc_help() -> None:
 
 
 example_path = "examples/passwddump.txt"
-python_exec = 0
+python_exec = "none"
 att_syntax = False
 tag_replacement = False
 default_output = True
+regex = False
 mode = "both"
 positives = []
 name: str = example_path
@@ -46,9 +49,9 @@ command_args = sys.argv[1:]
 options: list[tuple[str, str]] = [('-f', example_path)]
 arguments: list[str] = [example_path]
 try:
-    options, arguments = getopt.getopt(command_args, "hatp:f:o:s:m:",
+    options, arguments = getopt.getopt(command_args, "hatrp:f:o:s:m:",
                                        ["help", "att_syntax", "tag_replacement", "python=", "file=", "output=",
-                                        "signatures=", "mode="])
+                                        "signatures=", "mode=", "regex"])
 except getopt.GetoptError as error:
     print(error)
     sys.exit(2)
@@ -56,7 +59,10 @@ for option, argument in options:
     if option in ['-h', '--help']:
         merubacc_help()
     elif option in ['-p', '--python']:
-        python_exec = str(argument)
+        if str(argument) not in ["none", "both", "compress", "compare"]:
+            print("Not valid -p or --python argument, defaulting to 'none'")
+        else:
+            python_exec = str(argument)
     elif option in ['-m', '--mode']:
         mode = str(argument)
     elif option in ['-a', '--att_syntax']:
@@ -71,32 +77,27 @@ for option, argument in options:
         default_output = False
     elif option in ['-s', '--signatures']:
         signatures_path = str(argument)
+    elif option in ['-r', '--regex']:
+        regex = True
 if exists(name):
     name_without_extension = name.split('.')[0]
     extension = name.split('.')[-1]
     program = read_program(name=name)
-    switch = {
-        "both": 3,
-        "compare": 2,
-        "compress": 1,
-        "none": 0
-    }
-    python_exec = switch.get(python_exec, 0)
+    if default_output:
+        name_without_extension = name_without_extension + "-compressed"
     if mode == "compare-only":
-        names, signatures = get_signatures(signatures_path, python_exec=python_exec)
-        positives = compare_program(program=program, signatures=signatures, names=names, python_exec=python_exec)
+        positives = compare_program(program=program, path=signatures_path, python_exec=python_exec,
+                                    regex_signatures=regex)
     else:
         if mode == "compress-only":
             programs = compress_program(program=program, python_exec=python_exec)
         else:
-            names, signatures = get_signatures(signatures_path, python_exec=python_exec)
-            programs, positives = compress_and_compare_program(program=program, signatures=signatures, names=names,
-                                                               python_exec=python_exec)
+            programs, positives = compress_and_compare_program(program=program, path=signatures_path,
+                                                               python_exec=python_exec, regex_signatures=regex)
         num_program = 0
         for program in programs:
-            if default_output:
-                name_output = name_without_extension + "-compressed." + extension
-            write_program(name=name_output + "-" + str(num_program), att_syntax=att_syntax,
+            name = name_without_extension + "-" + str(num_program) + "." + extension
+            write_program(name=name, att_syntax=att_syntax,
                           program=program)
             num_program = num_program + 1
     if len(positives) > 0:

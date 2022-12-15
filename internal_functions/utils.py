@@ -3,24 +3,24 @@ import re
 from internal_functions.program import Program
 
 
-def get_registers():
+def _get_registers():
     return ["eax", "ebx", "ecx", "edx", "esp", "ebp", "esi", "edi", "rax", "rbx", "rip", "rcx", "rdx", "rsp",
             "rbp", "rsi", "rdi", "r8", "r9", "r10", "r11", "r12", "r13", "r14", "r15"]
 
 
-def get_operations():
+def _get_operations():
     return ["pop", "push", "nop", "mov", "cmp", "add", "sub", "and", "xor", "test", "lea", "shr", "shl"]
 
 
-def get_conditional_branch():
+def _get_conditional_branch():
     return ["jz", "je", "jne", "jl", "jle", "jg", "jge"]
 
 
-def get_branch():
+def _get_branch():
     return ["jmp", "call", "syscall"]
 
 
-def get_return_type():
+def _get_return_type():
     return ["ret"]
 
 
@@ -41,7 +41,7 @@ def is_operation(possible_operation: str) -> bool:
     :param possible_operation: instruction to test
     :return: True if is operation, False if not
     """
-    return possible_operation in get_operations()
+    return possible_operation in _get_operations()
 
 
 def is_conditional_branch(possible_conditional_branch: str) -> bool:
@@ -50,7 +50,7 @@ def is_conditional_branch(possible_conditional_branch: str) -> bool:
     :param possible_conditional_branch: instruction to test
     :return: True if is operation, False if not
     """
-    return possible_conditional_branch in get_conditional_branch()
+    return possible_conditional_branch in _get_conditional_branch()
 
 
 def is_branch(possible_branch: str) -> bool:
@@ -59,7 +59,7 @@ def is_branch(possible_branch: str) -> bool:
     :param possible_branch: instruction to test
     :return: True if is operation, False if not
     """
-    return possible_branch in get_branch()
+    return possible_branch in _get_branch()
 
 
 def is_return(possible_return: str) -> bool:
@@ -68,19 +68,19 @@ def is_return(possible_return: str) -> bool:
     :param possible_return: instruction to test
     :return: True if is operation, False if not
     """
-    return possible_return in get_return_type()
+    return possible_return in _get_return_type()
 
 
-def is_register(operand):
+def is_register(operand: str) -> bool:
     """
     Check if operand is a register
     :param operand: operand to check
     :return: True if operand, False if not
     """
-    return operand in get_registers()
+    return operand in _get_registers()
 
 
-def is_memory_address(operand):
+def is_memory_address(operand) -> bool:
     """
     Check if operand is a memory address
     :param operand: operand to check
@@ -89,17 +89,17 @@ def is_memory_address(operand):
     return '[' in str(operand)
 
 
-def is_tag(program: Program, operand):
+def is_tag(program: Program, operand: str) -> bool:
     """
     Check if operand is a tag
     :param operand: operand to check
     :param program: program where the operand belongs
     :return: True if tag, False if not
     """
-    return operand in program.tags
+    return str(operand) in program.tags
 
 
-def is_immediate(program: Program, operand):
+def is_immediate(program: Program, operand: str) -> bool:
     """
     Check if operand is an immediate
     :param operand: operand to check
@@ -111,6 +111,11 @@ def is_immediate(program: Program, operand):
 
 
 def reformat_signatures(signatures: list[list[str]]) -> str:
+    """
+    Reformat signatures to evade regex and string shenanigans
+    :param signatures: Signatures that may fail in comparation
+    :return: Signatures with evaded regex and string shenanigans
+    """
     new_signatures = []
     for content in signatures:
         new_signatures.append(content)

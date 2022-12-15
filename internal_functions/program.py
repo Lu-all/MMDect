@@ -10,6 +10,10 @@ class Program:
         self.num_tags = []
 
     def copy(self):
+        """
+        Copy a program
+        :return: Copy of the program
+        """
         new_program = Program()
         new_program.header = self.header
         new_program.to_replace = self.to_replace
@@ -32,7 +36,7 @@ class Program:
         """
         self.instructions.append(instruction)
 
-    def insert_to_instructions(self, line: int, instruction: list):
+    def insert_to_instructions(self, line: int, instruction: list) -> None:
         """
         Add instruction to program
         :param instruction: instruction to add
@@ -96,7 +100,7 @@ class Program:
         except IndexError:
             pass
 
-    def tag_replacement(self):
+    def tag_replacement(self) -> None:
         """
         Replace tag with number of line. Experimental use.
         :return: None
@@ -120,7 +124,7 @@ class Program:
     def _return_line_of_tag(self, tag_to_replace: list) -> int:
         return tag_to_replace[1]
 
-    def line_to_tags(self):
+    def line_to_tags(self) -> None:
         """
         Replace line jumps with original tags (tag_replacement reverse). Experimental use.
         :return: None
@@ -139,5 +143,10 @@ class Program:
                         replaced = True
                     num_tag = num_tag + 1
 
-    def delete(self, program_line):
+    def delete(self, program_line: int) -> None:
+        """
+        Delete an instruction
+        :param program_line: Line where the instruction is located
+        :return: None
+        """
         self.instructions.pop(program_line)

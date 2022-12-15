@@ -21,6 +21,7 @@ python merubacc.py -h -a -m {compress-only, compare-only, both} -d -p {none,both
 - -m or --mode to specify mode between: compress-only (only execute compression module), compare-only (only execute
   comparation module or both (execute both modules). Both is selected by default.
 - -p or --python to execute compression, comparation or both in Python instead of Prolog (default value is none).
+- -r or --regex to enable both Regex and Prolog comparation. This option overwrites -p / --python argument.
 - -f or --file to specify input file. If not specified, it will use examples/passwddump.txt as input.
 - -o or --output to specify name of output file. If not specified, it will be < file >-compressed.< extension >.
 - -s or --signatures to specify path of signatures parent directory, which also enables compare step. Rules for prolog
@@ -66,6 +67,8 @@ specified, each compressed version of a program obtained in compression step wil
 In python mode, signatures will be compared using regex. Regex signatures must have '.txt' extension.
 In prolog mode (default), signatures will be compared as Functors. Prolog signatures must have '.prologsign' extension.
 
+Both signatures type can be compared if -r / --regex argument is specified.
+
 | Regex signature                                   | Prolog signature                         |
 |---------------------------------------------------|------------------------------------------|
 | .* 'mov',\s*'[re]\w\w?',\s*'0x6477737361702FFF'.* | mov(reg(_Reg),imm('0x6477737361702FFF')) |
@@ -73,5 +76,5 @@ In prolog mode (default), signatures will be compared as Functors. Prolog signat
 For example:
 
 ```bash
-python merubacc.py --file=examples\passwddump.txt --signatures=example_signatures/ --mode=compare-only
+python merubacc.py -r --file=examples\passwddump.txt --signatures=example_signatures/ --mode=compare-only
 ```

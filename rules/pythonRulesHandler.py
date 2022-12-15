@@ -244,10 +244,7 @@ class RulesHandler:
             return False
 
     def _rule4_check(self, program_line: int, program: Program) -> bool:
-        return (is_memory_address(program.operand(program_line, 1))) and (
-            is_register(program.operand(program_line, 2))) and (
-                   is_memory_address(program.operand(program_line + 1, 1))) \
-               and (program.operand(program_line, 1) == program.operand(program_line + 1, 1))
+        return self._rule10_check(program_line, program)
 
     def rule4(self, program_line: int, program: Program) -> bool:
         """
@@ -625,9 +622,7 @@ class RulesHandler:
             return False
 
     def _rule21_check(self, program_line: int, program: Program) -> bool:
-        return (is_register(program.operand(program_line, 1))) and (
-            is_register(program.operand(program_line, 2))) and \
-               (program.operand(program_line, 1) == program.operand(program_line + 1, 1))
+        return self._rule19_check(program_line, program)
 
     def rule21(self, program_line: int, program: Program) -> bool:
         """

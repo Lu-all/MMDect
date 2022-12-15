@@ -6,11 +6,10 @@ from internal_functions.program import Program
 from internal_functions.utils import is_instruction, is_register, is_immediate, is_conditional_branch, is_branch
 
 
-def get_signatures(signatures_path: str, python_exec: int) -> list[list[str], list[list[str]]]:
+def get_prolog_signatures(signatures_path: str) -> list[list[str], list[list[str]]]:
     """
-    Reads signatures from a given path
+    Read prolog signatures from a given path
     :param signatures_path: Parent directory where the signatures are located
-    :param python_exec: Indicates type of signatures to read
     :return: Names and content of signatures
     """
     if not exists(signatures_path):
@@ -18,15 +17,32 @@ def get_signatures(signatures_path: str, python_exec: int) -> list[list[str], li
         sys.exit(3)
     signatures_array = []
     names_array = []
-    end_files = "txt" if python_exec > 1 else "prologsign"
-    for file in Path(signatures_path).glob('**/*.' + end_files):
+    for file in Path(signatures_path).glob('**/*.prologsign'):
         signature = file.read_text().split('\n')
         names_array.append(signature[0])
         signatures_array.append(signature[1:])
     return [names_array, signatures_array]
 
 
-def write_program(program: Program, name: str, att_syntax: bool, use_tag_replacement=False):
+def get_regex_signatures(signatures_path: str) -> list[list[str], list[list[str]]]:
+    """
+    Read regex signatures from a given path
+    :param signatures_path: Parent directory where the signatures are located
+    :return: Names and content of signatures
+    """
+    if not exists(signatures_path):
+        print("Signature path not valid. Check -s or --signatures argument and try again.")
+        sys.exit(3)
+    signatures_array = []
+    names_array = []
+    for file in Path(signatures_path).glob('**/*.txt'):
+        signature = file.read_text().split('\n')
+        names_array.append(signature[0])
+        signatures_array.append(signature[1:])
+    return [names_array, signatures_array]
+
+
+def write_program(program: Program, name: str, att_syntax: bool, use_tag_replacement=False) -> None:
     """
     Write current instructions in variable program to file
     :param program: program to export to file
