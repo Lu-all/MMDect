@@ -1,3 +1,5 @@
+from typing import List, Set
+
 from pyswip import Prolog
 
 from internal_functions.program import Program
@@ -13,7 +15,7 @@ def init_prolog() -> Prolog:
     return prolog
 
 
-def _parse_solutions(solution) -> list[str]:
+def _parse_solutions(solution) -> List[str]:
     return str(solution).replace("[b'", "['").replace(", b'", ", '").replace("[[[", "[[").replace(
         "]]]", "]]").replace("]], [[", "]]#[[").split('#')
 
@@ -29,7 +31,7 @@ def _str_to_program(s, program) -> Program:
     return new_program
 
 
-def compress_prolog(program: Program, prolog=None) -> list[Program]:
+def compress_prolog(program: Program, prolog=None) -> List[Program]:
     """
     Execute compress query
     :param program: Program to compress
@@ -42,14 +44,14 @@ def compress_prolog(program: Program, prolog=None) -> list[Program]:
     query_solutions = prolog.query("compress(" + instructions + ", R)")
     new_programs = []
     for solution in query_solutions:
-        solutions = _parse_solutions(solution["R"])
+        solutions = _parse_solutions(solution["R"])  # type: ignore
         for s in solutions:
             new_program = _str_to_program(s, program)
             new_programs.append(new_program)
     return new_programs
 
 
-def compare_prolog(program: Program, signatures: str, names: str, prolog=None) -> set[str]:
+def compare_prolog(program: Program, signatures: str, names: str, prolog=None) -> Set[str]:
     """
     Execute compare query
     :param program: Program to compare
@@ -65,7 +67,7 @@ def compare_prolog(program: Program, signatures: str, names: str, prolog=None) -
     names = str(names.replace("'", '"'))
     query_solutions = prolog.query("compare(" + instructions + ", " + signatures + ", " + names + ", Positives)")
     for solution in query_solutions:
-        positives = _parse_solutions(solution["Positives"])
+        positives = _parse_solutions(solution["Positives"])  # type: ignore
         positives = str(positives).replace("[", "").replace("]", "").split(", ")
         for positive in positives:
             all_positives.add(positive.replace("'", "").replace('"', ""))

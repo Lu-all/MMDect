@@ -1,3 +1,5 @@
+from typing import List
+
 from internal_functions.program import Program
 from internal_functions.utils import is_operation, is_conditional_branch, is_instruction, is_immediate, is_register, \
     is_memory_address
@@ -6,7 +8,7 @@ from internal_functions.utils import is_operation, is_conditional_branch, is_ins
 class RulesHandler:
     NUMBER_OF_RULES = 19
 
-    def possible_rules(self, program: Program, program_line: int, experimental_rules=False) -> list:
+    def possible_rules(self, program: Program, program_line: int, experimental_rules=False) -> List:
         """
         Return a list of all possible rules o apply
         :param program: program to analyze
@@ -42,7 +44,7 @@ class RulesHandler:
                     # rule 19
                     elif experimental_rules and self._rule19_check(program_line, program):
                         rules.append(19)
-                elif is_operation(next_instruction) and len(program.get_line(program_line + 1)) == 3:
+                elif is_operation(next_instruction) and len(program.get_line(program_line + 1)) == 3:  # type: ignore
                     # rule 7
                     if self._rule7_check(program_line, program):
                         rules.append(7)
@@ -147,7 +149,8 @@ class RulesHandler:
                     rule_applied = True if self.rule4(program_line, program) else rule_applied
                     if experimental_rules:
                         rule_applied = True if self.rule19(program_line, program) else rule_applied
-                elif is_instruction(next_instruction) and len(program.instruction(program_line + 1)) == 3:
+                elif is_instruction(next_instruction) and len(
+                        program.instruction(program_line + 1)) == 3:  # type: ignore
                     rule_applied = True if self.rule7(program_line, program) else rule_applied
                     rule_applied = True if self.rule8(program_line, program) else rule_applied
                     if experimental_rules:

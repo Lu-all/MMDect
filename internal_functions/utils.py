@@ -24,90 +24,91 @@ def _get_return_type():
     return ["ret"]
 
 
-def is_instruction(possible_instruction: str) -> bool:
+def is_instruction(possible_instruction: str | None) -> bool:
     """
     Return True if possible_instruction is an accepted instruction
     :param possible_instruction: literal line to test
     :return: True if it is an accepted instruction, False if not
     """
-    return is_operation(possible_instruction) or is_branch(
+    return False if possible_instruction is None else is_operation(possible_instruction) or is_branch(
         possible_instruction) or is_conditional_branch(possible_instruction) or is_return(
         possible_instruction)
 
 
-def is_operation(possible_operation: str) -> bool:
+def is_operation(possible_operation: str | None) -> bool:
     """
     Check if instruction is an operation
     :param possible_operation: instruction to test
     :return: True if is operation, False if not
     """
-    return possible_operation in _get_operations()
+    return False if possible_operation is None else possible_operation in _get_operations()
 
 
-def is_conditional_branch(possible_conditional_branch: str) -> bool:
+def is_conditional_branch(possible_conditional_branch: str | None) -> bool:
     """
     Check if instruction is a conditional_branch
     :param possible_conditional_branch: instruction to test
     :return: True if is operation, False if not
     """
-    return possible_conditional_branch in _get_conditional_branch()
+    return False if possible_conditional_branch is None else possible_conditional_branch in _get_conditional_branch()
 
 
-def is_branch(possible_branch: str) -> bool:
+def is_branch(possible_branch: str | None) -> bool:
     """
     Check if instruction is a branch
     :param possible_branch: instruction to test
     :return: True if is operation, False if not
     """
-    return possible_branch in _get_branch()
+    return False if possible_branch is None else possible_branch in _get_branch()
 
 
-def is_return(possible_return: str) -> bool:
+def is_return(possible_return: str | None) -> bool:
     """
     Check if instruction is a return instruction
     :param possible_return: instruction to test
     :return: True if is operation, False if not
     """
-    return possible_return in _get_return_type()
+    return False if possible_return is None else possible_return in _get_return_type()
 
 
-def is_register(operand: str) -> bool:
+def is_register(operand: str | None) -> bool:
     """
     Check if operand is a register
     :param operand: operand to check
     :return: True if operand, False if not
     """
-    return operand in _get_registers()
+    return False if operand is None else operand in _get_registers()
 
 
-def is_memory_address(operand) -> bool:
+def is_memory_address(operand: str | None) -> bool:
     """
     Check if operand is a memory address
     :param operand: operand to check
     :return: True if memory address, False if not
     """
-    return '[' in str(operand)
+    return False if operand is None else '[' in operand
 
 
-def is_tag(program: Program, operand: str) -> bool:
+def is_tag(program: Program, operand: str | None) -> bool:
     """
     Check if operand is a tag
     :param operand: operand to check
     :param program: program where the operand belongs
     :return: True if tag, False if not
     """
-    return str(operand) in program.tags
+    return False if operand is None else operand in program.tags
 
 
-def is_immediate(program: Program, operand: str) -> bool:
+def is_immediate(program: Program, operand: str | None) -> bool:
     """
     Check if operand is an immediate
     :param operand: operand to check
     :param program: program where the operand belongs
     :return: True if immediate, False if not
     """
-    return not is_register(operand) and not is_memory_address(operand) and not is_tag(program,
-                                                                                      operand)
+    return False if operand is None else not is_register(operand) and not is_memory_address(operand) and not is_tag(
+        program,
+        operand)
 
 
 def reformat_signatures(signatures: list[list[str]]) -> str:

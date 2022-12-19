@@ -1,4 +1,5 @@
 import re
+from typing import List, Set
 
 from internal_functions.IOHandler import get_prolog_signatures, get_regex_signatures
 from internal_functions.program import Program
@@ -7,8 +8,8 @@ from rules.prologHandler import compress_prolog, compare_prolog
 from rules.pythonRulesHandler import RulesHandler
 
 
-def get_all_coincidences(program: str, signatures: list[list[str]], names: list[str], experimental_rules: bool) \
-        -> set[str]:
+def get_all_coincidences(program: str, signatures: List[List[str]], names: List[str], experimental_rules: bool) \
+        -> Set[str]:
     """
     Compare instructions to signatures provided in Python and return matches
     :param program: instructions to compare
@@ -26,7 +27,7 @@ def get_all_coincidences(program: str, signatures: list[list[str]], names: list[
     return positives
 
 
-def compress_program(program: Program, python_exec: str, tag_replacement=False) -> list[Program]:
+def compress_program(program: Program, python_exec: str, tag_replacement=False) -> List[Program]:
     """
     Compress program using metamorphic rules
     :param python_exec: Compress in Python
@@ -45,7 +46,7 @@ def compress_program(program: Program, python_exec: str, tag_replacement=False) 
 
 
 def compare_program(program: Program, path: str, python_exec: str, regex_signatures=False,
-                    tag_replacement=False) -> set[str]:
+                    tag_replacement=False) -> Set[str]:
     """
     Compare program with given signatures
     :param program: Instructions to compare
@@ -79,7 +80,7 @@ def compare_program(program: Program, path: str, python_exec: str, regex_signatu
 
 def compress_and_compare_program(program: Program, path: str, python_exec: str, regex_signatures=False,
                                  tag_replacement=False) -> \
-        list[list[Program], set[str]]:
+        tuple[List[Program], Set[str]]:
     """
     Compress and compare program with given signatures
     :param program: program to compress
@@ -93,4 +94,4 @@ def compress_and_compare_program(program: Program, path: str, python_exec: str, 
     programs = compress_program(program, python_exec, tag_replacement)
     for new_program in programs:
         positives = compare_program(new_program, path, python_exec, regex_signatures, tag_replacement)
-    return [programs, positives]
+    return programs, positives

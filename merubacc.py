@@ -80,11 +80,22 @@ for option, argument in options:
     elif option in ['-r', '--regex']:
         regex = True
 if exists(name):
-    name_without_extension = name.split('.')[0]
-    extension = name.split('.')[-1]
     program = read_program(name=name)
     if default_output:
+        name_output_array = name.split('.')
+        extension = name_output_array[-1]
+        name_without_extension = name_output_array[0]
+        name_output_array = name_output_array[1::len(name_output_array)]
+        for cut in name_output_array:
+            name_without_extension = name_without_extension + '.' + cut
         name_without_extension = name_without_extension + "-compressed"
+    else:
+        name_output_array = name_output.split('.')
+        extension = name_output_array[-1]
+        name_without_extension = name_output_array[0]
+        name_output_array = name_output_array[1::len(name_output_array)]
+        for cut in name_output_array:
+            name_without_extension = name_without_extension + '.' + cut
     if mode == "compare-only":
         positives = compare_program(program=program, path=signatures_path, python_exec=python_exec,
                                     regex_signatures=regex)

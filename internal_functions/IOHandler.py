@@ -1,12 +1,13 @@
 import sys
 from os.path import exists
 from pathlib import Path
+from typing import List
 
 from internal_functions.program import Program
 from internal_functions.utils import is_instruction, is_register, is_immediate, is_conditional_branch, is_branch
 
 
-def get_prolog_signatures(signatures_path: str) -> list[list[str], list[list[str]]]:
+def get_prolog_signatures(signatures_path: str) -> tuple[List[str], List[List[str]]]:
     """
     Read prolog signatures from a given path
     :param signatures_path: Parent directory where the signatures are located
@@ -21,10 +22,10 @@ def get_prolog_signatures(signatures_path: str) -> list[list[str], list[list[str
         signature = file.read_text().split('\n')
         names_array.append(signature[0])
         signatures_array.append(signature[1:])
-    return [names_array, signatures_array]
+    return names_array, signatures_array
 
 
-def get_regex_signatures(signatures_path: str) -> list[list[str], list[list[str]]]:
+def get_regex_signatures(signatures_path: str) -> tuple[List[str], List[List[str]]]:
     """
     Read regex signatures from a given path
     :param signatures_path: Parent directory where the signatures are located
@@ -39,7 +40,7 @@ def get_regex_signatures(signatures_path: str) -> list[list[str], list[list[str]
         signature = file.read_text().split('\n')
         names_array.append(signature[0])
         signatures_array.append(signature[1:])
-    return [names_array, signatures_array]
+    return names_array, signatures_array
 
 
 def write_program(program: Program, name: str, att_syntax: bool, use_tag_replacement=False) -> None:
@@ -58,17 +59,17 @@ def write_program(program: Program, name: str, att_syntax: bool, use_tag_replace
         f.write(line)
     if att_syntax:
         for i in range(0, program.length()):
-            if len(program.get_line(i)) >= 2:
+            if len(program.get_line(i)) >= 2:  # type: ignore
                 first_operand = ''
-                if is_register(program.operand(i, 1)):
+                if is_register(program.operand(i, 1)):  # type: ignore
                     first_operand = "%"
-                elif is_immediate(program, program.operand(i, 1)):
+                elif is_immediate(program, program.operand(i, 1)):  # type: ignore
                     first_operand = "$"
-                if len(program.get_line(i)) == 3:
+                if len(program.get_line(i)) == 3:  # type: ignore
                     second_operand = ''
-                    if is_register(program.operand(i, 2)):
+                    if is_register(program.operand(i, 2)):  # type: ignore
                         second_operand = "%"
-                    elif is_immediate(program, program.operand(i, 2)):
+                    elif is_immediate(program, program.operand(i, 2)):  # type: ignore
                         second_operand = "$"
                     s = str(program.instruction(i)) + ' ' + second_operand + str(
                         program.operand(i, 2)) + ', ' + first_operand + \
@@ -81,9 +82,9 @@ def write_program(program: Program, name: str, att_syntax: bool, use_tag_replace
             f.write('\n')
     else:
         for i in range(0, program.length()):
-            if len(program.get_line(i)) == 2:
+            if len(program.get_line(i)) == 2:  # type: ignore
                 s = str(program.instruction(i)) + ' ' + str(program.operand(i, 1))
-            elif len(program.get_line(i)) == 3:
+            elif len(program.get_line(i)) == 3:  # type: ignore
                 s = str(program.instruction(i)) + ' ' + str(program.operand(i, 1)) + ', ' + str(program.operand(i, 2))
             else:
                 s = str(program.instruction(i))

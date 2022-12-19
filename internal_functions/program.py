@@ -109,14 +109,14 @@ class Program:
         line = 0
         while line < length:
             if self.get_line(line).__class__ == int:
-                tag = self.to_replace[self.get_line(line) - 1]
-                self.to_replace[self.get_line(line) - 1] = [tag, line + 1]
+                tag = self.to_replace[self.get_line(line) - 1]  # type: ignore
+                self.to_replace[self.get_line(line) - 1] = [tag, line + 1]  # type: ignore
                 self.delete(line)
                 length = length - 1
             line = line + 1
         for line in range(0, self.length()):
-            if (len(self.get_line(line)) >= 2 and self.operand(line, 1) in self.tags) or (
-                    len(self.get_line(line)) == 3 and self.operand(line, 2) in self.tags):
+            if (len(self.get_line(line)) >= 2 and self.operand(line, 1) in self.tags) or (  # type: ignore
+                    len(self.get_line(line)) == 3 and self.operand(line, 2) in self.tags):  # type: ignore
                 for n in range(0, len(self.to_replace)):
                     self.instructions[line] = [self.num_tags[n] if i == self.tags[n] else i for i in
                                                self.instructions[line]]
