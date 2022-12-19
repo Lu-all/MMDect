@@ -93,5 +93,9 @@ def compress_and_compare_program(program: Program, path: str, python_exec: str, 
     positives = set()
     programs = compress_program(program, python_exec, tag_replacement)
     for new_program in programs:
-        positives = compare_program(new_program, path, python_exec, regex_signatures, tag_replacement)
+        if len(positives) == 0:
+            positives = compare_program(new_program, path, python_exec, regex_signatures, tag_replacement)
+        else:
+            positives = positives.union(
+                compare_program(new_program, path, python_exec, regex_signatures, tag_replacement))
     return programs, positives
