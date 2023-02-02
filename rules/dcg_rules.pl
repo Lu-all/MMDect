@@ -145,14 +145,14 @@ register(reg(r15)) --> ["r15"].
 
 % IMM
 % imm(Imm) <--> ["Imm"]
-immediate(imm(I)) --> [A], {number_string(I,A)}.
+immediate(imm(I)) --> [A], {(nonvar(I);nonvar(A)),number_string(I,A)}.
 
 % MEM
 
 % mem(Mem) --> ["[Mem]"]
 memory(mem(A)) --> 
     [S],{
-          var(S),
+          nonvar(A),
           atom_string(A,S1),
           string_concat(S1,"]",S2),
           string_concat("[",S2,S)
@@ -176,21 +176,11 @@ arguments([A]) --> argument(A).
 arguments([A|As]) --> argument(A), arguments(As).
 
 % instruction
-op_type(A) --> i_add(A).
-op_type(A) --> i_cmp(A).
-op_type(A) --> i_sub(A).
-op_type(A) --> i_and(A).
-op_type(A) --> i_xor(A).
-op_type(A) --> i_test(A).
-op_type(A) --> i_lea(A).
-op_type(A) --> i_shl(A).
-op_type(A) --> i_shr(A).
-
 operation(add) --> ["add"].
 operation(cmp) --> ["cmp"].
 operation(sub) --> ["sub"].
 operation(and) --> ["and"].
-operation(xor) --> ["xor"].
+operation(xorr) --> ["xor"].
 operation(test) --> ["test"].
 operation(lea) --> ["lea"].
 operation(shl) --> ["shl"].
@@ -214,70 +204,81 @@ command(jle) --> ["jle"].
 command(ret) --> ["ret"].
 command(syscall) --> ["syscall"].
 
-i_add(add(A1,A2)) --> ["add"], argument(A1), argument(A2).
-i_cmp(cmp(A1,A2)) --> ["cmp"], argument(A1), argument(A2).
-i_sub(sub(A1,A2)) --> ["sub"], argument(A1), argument(A2).
-i_and(and(A1,A2)) --> ["and"], argument(A1), argument(A2).
-i_xor(xor(A1,A2)) --> ["xor"], argument(A1), argument(A2).
-i_test(test(A1,A2)) --> ["test"], argument(A1), argument(A2).
-i_lea(lea(A1,A2)) --> ["lea"], argument(A1), argument(A2).
-i_shl(shl(A1,A2)) --> ["shl"], argument(A1), argument(A2).
-i_shr(shr(A1,A2)) --> ["shr"], argument(A1), argument(A2).
-
-i_mov(mov(A1,A2)) --> ["mov"], argument(A1), argument(A2).
-i_push(push(A1)) --> ["push"], argument(A1).
-i_pop(pop(A1)) --> ["pop"], argument(A1).
-i_call(call(A1)) --> ["call"], argument(A1).
-
-i_jmp(jmp(A1)) --> ["jmp"], argument(A1).
-i_je(je(A1)) --> ["je"], argument(A1).
-i_jne(jne(A1)) --> ["jne"], argument(A1).
-i_jz(jz(A1)) --> ["jz"], argument(A1).
-i_jnz(jz(A1)) --> ["jnz"], argument(A1).
-i_jg(jg(A1)) --> ["jg"], argument(A1).
-i_jge(jge(A1)) --> ["jng"], argument(A1).
-i_jl(jl(A1)) --> ["jl"], argument(A1).
-i_jle(jle(A1)) --> ["jnl"], argument(A1).
-
-i_ret(ret) --> ["ret"].
-i_syscall(syscall) --> ["syscall"].
-
-%instruction(A) --> op_type(A).
-%instruction(A) --> i_mov(A).
-%instruction(A) --> i_push(A).
-%instruction(A) --> i_pop(A).
-%instruction(A) --> i_call(A).
-%instruction(A) --> i_jmp(A).
-%instruction(A) --> i_jz(A).
-%instruction(A) --> i_jnz(A).
-%instruction(A) --> i_je(A).
-%instruction(A) --> i_jne(A).
-%instruction(A) --> i_jg(A).
-%instruction(A) --> i_jge(A).
-%instruction(A) --> i_jl(A).
-%instruction(A) --> i_ret(A).
-%instruction(A) --> i_syscall(A).
-
 instruction([C,As]) --> command(C), arguments(As).
 % program
 
 program([I]) --> instruction(I).
-program([I|P]) --> instruction(I), program(P).
+program([I,P]) --> instruction(I), program(P).
 
 %%%%%%%%%%%
 %Functions%
-%%%%%%%%%%%
+%%%%%%%%%%%    
+    
+% Parse flow:
+% [["i", "a1", "a2"]["i","a"]] <--> [i[a1,a2], i[a]] <--> [i(a1,a2), i(a)]
 
+%[["i", "a1", "a2"]["i","a"]] --> [i(a1,a2), i(a)]
 parser(List, Program) :-
-    flatten(List, Flat),
-    phrase(program(Program),Flat).
+    nonvar(List),
+    to_atoms(List, Flat),
+    to_functors(Flat,Program).
 
+%[["i", "a1", "a2"]["i","a"]] <-- [i(a1,a2), i(a)]
 parser(List, Program) :-
-    phrase(program(Program),List).
+    nonvar(Program),
+    to_functors(Flat, Program),
+    to_atoms(List, Flat).
+
+% [["i", "a1", "a2"]["i","a"]] <--> [[i,[a1,a2]], [i,[a]]]
+to_atoms([], []).
+
+to_atoms([Co|O], [Cr|R]) :-
+    phrase(command(Cr), [Co]),
+    R = [R1],
+    phrase(arguments(R1), O).
+
+to_atoms([Co|[]], [Cr|[]]) :-
+    phrase(command(Cr), [Co]).
+
+to_atoms([O|Os], [R|Rs]) :-
+    to_atoms(O,R),
+    to_atoms(Os,Rs).
+
+to_functors([], []).
+% [[i, [a1, a2]], [i, [a]] --> [i(a1,a2), i(a)]
+to_functors([X|Xs], [Y|Ys]) :-
+    nonvar(X),
+    my_flatten(X, Xf),
+	to_functor(Xf, Y),
+    to_functors(Xs, Ys).
+
+% [[i, [a1, a2]], [i, [a]] <-- [i(a1,a2), i(a)]
+to_functors([X|Xs], [Y|Ys]) :-
+    nonvar(Y),
+	to_functor(Xf, Y),
+    my_flatten(X, Xf),
+    to_functors(Xs, Ys).
+
+% [i, a1, a2] <--> i(a1,a2)
+to_functor([],[]).
+
+to_functor(X, Y) :-
+    Y =.. X.
+
+% [i, a1, a2] <--> [i, [a1, a2]]
+my_flatten([X,Args], [X|Args]):-
+    atom(X);string(X).
+my_flatten([X], [X]):-
+    atom(X);string(X).
+
+my_flatten([X|Xs], [Y|Ys]):-
+    my_flatten(X,Y),
+    my_flatten(Xs,Ys).
+
 
 /** <examples>
 ?- parser(L, [mov(reg(rax),imm(0x12)), mov(reg(rax),mem(ax))]).
 ?- test(L), parser(L, P).
-?- phrase(memory(B),["[rax]"]).
-?- phrase(memory(mem('[',rax,']')),A).
+?- parser([["mov", "[123]","0x6477737361702FFF"],["xor", "rax", "rax"]], P).
+?- myflatten([["mov", "[123]","0x6477737361702FFF"],["xor", "rax", "rax"]], R).
 */
