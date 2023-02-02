@@ -132,7 +132,10 @@ imm(X) :-
 mem(X) :-
     nonvar(X), string_chars(X, X1), length(X1, L), nth0(0, X1, '['), nth1(L, X1, ']').
 mem(X) :-
-    var(X), random_between(0x1000, 0xffff, B), number_chars(B, B1), append(['['],B1, X1), append(X1, [']'], X2), atom_chars(X, X2).
+    var(X), 
+    random_between(0x1000, 0xffff, B), 
+    number_chars(B, B1), append(['['],B1, X1), append(X1, [']'], X2), 
+    atom_chars(X, X2).
 
 % OP
 op_type(cmp).
