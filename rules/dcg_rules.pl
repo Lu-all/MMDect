@@ -167,11 +167,22 @@ memory(mem(A)) -->
           	atom_string(A,M)
         }.
 
+% TAG
+% tag(Tag) --> ["Tag"]
+tags(tag(A)) --> 
+    [S],{
+        	atom_string(A,S),
+          	\+phrase(memory(A),S),
+          	\+phrase(immediate(A),S),
+          	\+phrase(register(A),S)
+        }.
+
 % args
 
-argument(A) --> register(A).
-argument(A) --> memory(A).
-argument(A) --> immediate(A).
+argument(A) --> register(A),!.
+argument(A) --> memory(A),!.
+argument(A) --> immediate(A),!.
+argument(A) --> tags(A).
 arguments([A]) --> argument(A).
 arguments([A|As]) --> argument(A), arguments(As).
 
@@ -204,6 +215,21 @@ command(jle) --> ["jle"].
 command(ret) --> ["ret"].
 command(syscall) --> ["syscall"].
 
+command(tag(A)) -->
+    [T], {
+          nonvar(A),
+          atom_string(A,T1),
+          string_concat(T1,":",T)
+        }.
+
+command(tag(A)) --> 
+    [T],{
+        	nonvar(T),
+            string_concat(T1,":",T),
+          	atom_string(A,T1)
+        }.
+    
+         
 instruction([C,As]) --> command(C), arguments(As).
 % program
 
@@ -232,13 +258,16 @@ parser(List, Program) :-
 % [["i", "a1", "a2"]["i","a"]] <--> [[i,[a1,a2]], [i,[a]]]
 to_atoms([], []).
 
+to_atoms([Co|[]], [Cr|[]]) :-
+    (atom(Cr);string(Co);functor(Cr,tag, 1)),
+    phrase(command(Cr), [Co]).
+
 to_atoms([Co|O], [Cr|R]) :-
+    (atom(Cr);string(Co)),
+    (nonvar(O);nonvar(R)),
     phrase(command(Cr), [Co]),
     R = [R1],
     phrase(arguments(R1), O).
-
-to_atoms([Co|[]], [Cr|[]]) :-
-    phrase(command(Cr), [Co]).
 
 to_atoms([O|Os], [R|Rs]) :-
     to_atoms(O,R),
@@ -261,11 +290,12 @@ to_functors([X|Xs], [Y|Ys]) :-
 
 % [i, a1, a2] <--> i(a1,a2)
 to_functor([],[]).
-
+to_functor([tag(T)], tag(T)):-!.
 to_functor(X, Y) :-
     Y =.. X.
 
 % [i, a1, a2] <--> [i, [a1, a2]]
+my_flatten([tag(T)], [tag(T)]).
 my_flatten([X,Args], [X|Args]):-
     atom(X);string(X).
 my_flatten([X], [X]):-
