@@ -259,7 +259,8 @@ parser(List, Program) :-
 to_atoms([], []).
 
 to_atoms([Co|[]], [Cr|[]]) :-
-    (atom(Cr);string(Co);functor(Cr,tag, 1)),
+    (atom(Cr);string(Co);
+    (nonvar(Cr),functor(Cr,tag, 1))),
     phrase(command(Cr), [Co]).
 
 to_atoms([Co|O], [Cr|R]) :-
@@ -304,6 +305,8 @@ my_flatten([X], [X]):-
 my_flatten([X|Xs], [Y|Ys]):-
     my_flatten(X,Y),
     my_flatten(Xs,Ys).
+
+
 
 
 /** <examples>
