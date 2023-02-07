@@ -1,0 +1,7 @@
+Etc/shadow2
+mov(reg(_Reg),imm('0x6477737361702FFF')),
+_,
+push(reg(_Reg)),
+mov(reg(_Reg),imm('0xFFFFFFFF6374652F')),
+_,
+push(reg(_Reg))

@@ -297,11 +297,11 @@ rule(g15, [pop(Mem), jmp(Mem)], [ret]) :- mem(Mem).
 
 % CONDITIONAL BRANCH rules
 rule(f16, [je(J), jne(J)], [jmp(J)]).
-rule(f16-2, [jne(J), je(J)], [jmp(J)]).
+rule(f16_2, [jne(J), je(J)], [jmp(J)]).
 rule(f17, [jl(J), jge(J)], [jmp(J)]).
-rule(f17-2, [jge(J), jl(J)], [jmp(J)]).
+rule(f17_2, [jge(J), jl(J)], [jmp(J)]).
 rule(f18, [jg(J), jle(J)], [jmp(J)]).
-rule(f18-2, [jle(J), jg(J)], [jmp(J)]).
+rule(f18_2, [jle(J), jg(J)], [jmp(J)]).
 
 %%%%%%
 %Main%
