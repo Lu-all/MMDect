@@ -1,93 +1,3 @@
-%%%%%%%%%%
-%Examples%
-%%%%%%%%%%
-etc_shadow_sign([mov(reg(Reg),imm(0x6477737361702FFF)),
-op(shr,reg(Reg),imm(8)),
-push(reg(Reg)),
-mov(reg(Reg),imm(0xFFFFFFFF6374652F)),
-op(shl,reg(Reg),imm(32)),
-push(reg(Reg))]).
-
-test_sign([
-mov(mem(Mem), imm(_Imm)),
-push(mem(Mem)),
-push(imm(_Imm2)),
-mov(reg('r13'), imm(_Imm3))]).
-
-test([
-["mov", "[123]","0x6477737361702FFF"],
-["push", "[123]"],
-["push", "12"],
-["pop", "r12"],
-["push", "r12"],
-["mov", "r13", "13"],
-["mov", "r12", "0xFFFFFFFF6374652F"],
-["xor", "rax", "rax"]
-]).
-
-test_special([
-["mov", "[123]","0x6477737361702FFF"],
-["push", "[123]"],
-["push", "12"],
-["pop", "r12"],
-["mov", "r13", "13"],
-["mov", "r12", "0xFFFFFFFF6374652F"],
-["xor", "rax", "rax"],
-["syscall"],
-["jne", "loop_read"],
-["close_file:"]
-]).
-
-test_long([
-["mov", "r12", "0x6477737361702FFF"],
-["shr", "r12", "8"],
-["mov", "[r13]", "r12"],
-["push", "[r13]"],
-["mov", "r12", "0xFFFFFFFF6374652F"],
-["shl", "r12", "32"],
-["push", "r12"],
-["mov", "rdi", "rsp"],
-["add", "rdi", "4"],
-["xor", "rsi", "rsi"],
-["xor", "rdx", "rdx"],
-["pop", "r15"],
-["push", "r15"],
-["push", "0x2"],
-["pop", "rax"],
-["syscall"],
-["push", "rax"],
-["pop", "r12"],
-["mov", "r13", "0x100"],
-["sub", "rsp", "r13"],
-["loop_read:"],
-["mov", "rdi", "r12"],
-["mov", "rsi", "rsp"],
-["mov", "rdx", "r13"],
-["xor", "rax", "rax"],
-["syscall"],
-["xor", "r14", "r14"],
-["cmp", "rax", "r14"],
-["je", "close_file"],
-["mov", "rdx", "rax"],
-["mov", "r14", "0x1"],
-["mov", "rdi", "0x1"],
-["mov", "rsi", "rsp"],
-["mov", "rax", "0x1"],
-["syscall"],
-["cmp", "rax", "r14"],
-["je", "loop_read"],
-["jne", "loop_read"],
-["close_file:"],
-["mov", "rdi", "r12"],
-["mov", "r14", "0x1"],
-["mov", "rax", "r14"],
-["syscall"],
-["xor", "rdi", "rdi"],
-["mov", "r14", "0x3c"],
-["mov", "rax", "r14"],
-["syscall"]
-]).
-
 %%%%%%%%%%%%%
 %Basic types%
 %%%%%%%%%%%%%
@@ -148,11 +58,9 @@ op_type(lea).
 op_type(shl).
 op_type(shr).
 
-%%%%%%%%%%%
-%Functions%
-%%%%%%%%%%%
-
-% type
+%%%%%%
+%Type%
+%%%%%%
 
 type([],[]).
 
@@ -182,6 +90,30 @@ asign(P,R):-
     mem(P), R=mem(P),!.
 
 asign(P,P).
+
+%%%%%%%%%
+%Compare%
+%%%%%%%%%
+
+compare_firm([],_,_,[]).
+
+compare_firm([PLine|_Program], [Line], Name, Positive):-
+    check(PLine, Line),
+    Positive = [Name].
+
+compare_firm([PLine|Program], [Line|Lines],Name, Positive):-
+    check(PLine, Line),
+    compare_firm(Program, Lines, Name, Positive).
+
+compare_firm(_, _, _, []).
+
+check([],[]).
+check(L, M):-
+    L = M.
+
+%%%%%%%
+%Parse%
+%%%%%%%  
 
 % Output number, not atom
 string_atom(S,A):-
@@ -240,22 +172,6 @@ parse(Program, Parsed):-
 re_parse(Parsed, Result):-
     re_parser(Atoms, Parsed),
     matrix_string_matrix_atom(Result, Atoms).
-
-compare_firm([],_,_,[]).
-
-compare_firm([PLine|_Program], [Line], Name, Positive):-
-    check(PLine, Line),
-    Positive = [Name].
-
-compare_firm([PLine|Program], [Line|Lines],Name, Positive):-
-    check(PLine, Line),
-    compare_firm(Program, Lines, Name, Positive).
-
-compare_firm(_, _, _, []).
-
-check([],[]).
-check(L, M):-
-    L = M.
 
 %%%%%%%
 %Rules%
@@ -364,8 +280,113 @@ compare_firms([Line|Program], [Firm|Firms], [Name|Names], Positives):-
     append(New_positives, Positive, Positives),!.
 
 
+%%%%%%%%%%
+%Examples%
+%%%%%%%%%%
+
+etc_shadow_sign([
+    mov(reg(Reg),imm(0x6477737361702FFF)),
+    shr(reg(Reg),imm(8)),
+    push(reg(Reg)),
+    mov(reg(Reg),imm(0xFFFFFFFF6374652F)),
+    shl(reg(Reg),imm(32)),
+    push(reg(Reg))
+    ]).
+  
+compressed_test([
+    mov(mem('123'), imm(_Imm)),
+    push(mem('123')),
+    push(imm(_Imm2)),
+    mov(reg(r13), imm(_Imm3))
+    ]).
+  
+    
+original_test([
+    mov(mem('123'),
+    imm(7239381865414537215)),
+    push(mem('123')),
+    push(imm(12))
+    ]).
+
+test([
+    ["mov", "[123]","0x6477737361702FFF"],
+    ["push", "[123]"],
+    ["push", "12"],
+    ["pop", "r12"],
+    ["push", "r12"],
+    ["mov", "r13", "13"],
+    ["mov", "r12", "0xFFFFFFFF6374652F"],
+    ["xor", "rax", "rax"]
+    ]).
+        
+test_special([
+    ["mov", "[123]","0x6477737361702FFF"],
+    ["push", "[123]"],
+    ["push", "12"],
+    ["pop", "r12"],
+    ["mov", "r13", "13"],
+    ["mov", "r12", "0xFFFFFFFF6374652F"],
+    ["xor", "rax", "rax"],
+    ["syscall"],
+    ["jne", "loop_read"],
+    ["close_file:"]
+    ]).
+    
+test_long([
+    ["mov", "r12", "0x6477737361702FFF"],
+    ["shr", "r12", "8"],
+    ["mov", "[r13]", "r12"],
+    ["push", "[r13]"],
+    ["mov", "r12", "0xFFFFFFFF6374652F"],
+    ["shl", "r12", "32"],
+    ["push", "r12"],
+    ["mov", "rdi", "rsp"],
+    ["add", "rdi", "4"],
+    ["xor", "rsi", "rsi"],
+    ["xor", "rdx", "rdx"],
+    ["pop", "r15"],
+    ["push", "r15"],
+    ["push", "0x2"],
+    ["pop", "rax"],
+    ["syscall"],
+    ["push", "rax"],
+    ["pop", "r12"],
+    ["mov", "r13", "0x100"],
+    ["sub", "rsp", "r13"],
+    ["loop_read:"],
+    ["mov", "rdi", "r12"],
+    ["mov", "rsi", "rsp"],
+    ["mov", "rdx", "r13"],
+    ["xor", "rax", "rax"],
+    ["syscall"],
+    ["xor", "r14", "r14"],
+    ["cmp", "rax", "r14"],
+    ["je", "close_file"],
+    ["mov", "rdx", "rax"],
+    ["mov", "r14", "0x1"],
+    ["mov", "rdi", "0x1"],
+    ["mov", "rsi", "rsp"],
+    ["mov", "rax", "0x1"],
+    ["syscall"],
+    ["cmp", "rax", "r14"],
+    ["je", "loop_read"],
+    ["jne", "loop_read"],
+    ["close_file:"],
+    ["mov", "rdi", "r12"],
+    ["mov", "r14", "0x1"],
+    ["mov", "rax", "r14"],
+    ["syscall"],
+    ["xor", "rdi", "rdi"],
+    ["mov", "r14", "0x3c"],
+    ["mov", "rax", "r14"],
+    ["syscall"]
+    ]).
+
+
 /** <examples>
-?- test(P), compress(P, Result).
-?- test_long(P), etc_shadow_sign(R),compress_and_compare(P,C, [R], ['etc/shadow'], Positives).
-?- test(P), etc_shadow_sign(R1), test_sign(R2), compress_and_compare(P, R, [R1,R2], ['etc/shadow','test'], Positives).
-*/
+ ?- test_special(L), parser(L, P), parser(L1,P).
+ ?- test(P), compress(P, Result).
+ ?- test_long(P), etc_shadow_sign(R),compress_and_compare(P,C, [R], ['etc/shadow'], Positives).
+ ?- test(P), etc_shadow_sign(R1), test_sign(R2), compress_and_compare(P, R, [R1,R2], ['etc/shadow','test'], Positives).
+ ?- test(P), etc_shadow_sign(R1), test_sign(R2), test_cmp(R3), compress_and_compare(P, R, [R1,R2,R3], ['etc/shadow','test', 'original'], Positives), \+length(Positives, 0).
+ */
