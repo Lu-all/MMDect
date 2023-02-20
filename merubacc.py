@@ -166,7 +166,11 @@ if exists(name):
                 pfile.close()
             except getopt.GetoptError as error:
                 print(error)
-                sys.exit(3)
+                print_error(
+                    "\t[!] Could not print in given file. Check -O or --positives_output argument."
+                    "Printing now in standard output.",
+                    silent)
+                print_pass("Positives: " + str(positives), False)
     sys.exit(0)
 else:
     print_error("\t[!] Input file does not exist or is not specified. Check -f or --file argument and try again.",
