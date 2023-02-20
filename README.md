@@ -17,6 +17,7 @@ python merubacc.py -h -a -m {compress-only, compare-only, both} -d -p {none,both
 ```
 
 - -h or --help to display options
+- -v or --verbose to show output (true by default)
 - -a or --att_syntax to write the output file in ATT syntax (Intel syntax is selected by default).
 - -m or --mode to specify mode between: compress-only (only execute compression module), compare-only (only execute
   comparation module or both (execute both modules). Both is selected by default.
