@@ -32,6 +32,9 @@ def merubacc_help() -> None:
 
            "-o or --output to specify name of output file. If not specified, it will be <file>-compressed.<extension>\n"
 
+           "-O or --positives_output to write positives to a file. If not specified,"
+           "positives will be printed in standard output (even in silent mode)"
+
            "-s or --signatures to specify path of signatures parent directory, which also enables compare step."
            "Rules for prolog calculation should have '.prologsign' extension, "
            "while rules extension for comparation in python must be '.txt'. Python rules can be in regex format.\n",
@@ -40,13 +43,14 @@ def merubacc_help() -> None:
 
 silent = False
 example_path = "examples/passwddump.txt"
+positives_file = False
 command_args = sys.argv[1:]
 options: list[tuple[str, str]] = [('-f', example_path)]
 arguments: list[str] = [example_path]
 try:
-    options, arguments = getopt.getopt(command_args, "hatrp:f:o:s:m:",
-                                       ["help", "att_syntax", "tag_replacement", "python=", "file=", "output=",
-                                        "signatures=", "mode=", "regex"])
+    options, arguments = getopt.getopt(command_args, "hatrvp:f:o:O:s:m:",
+                                       ["help", "att_syntax", "tag_replacement", "verbose", "python=", "file=",
+                                        "output=", "positives_output=", "signatures=", "mode=", "regex"])
 except getopt.GetoptError as error:
     print(error)
     sys.exit(2)
@@ -100,6 +104,9 @@ for option, argument in options:
         print_warn("\t[+] Output file = " + str(argument), silent)
         name_output = str(argument)
         default_output = False
+    elif option in ['-O', '--positives_output']:
+        print_warn("\t[+] Positives output file = " + str(argument), silent)
+        positives_file = str(argument)
     elif option in ['-s', '--signatures']:
         print_warn("\t[+] Signatures path = " + str(argument), silent)
         signatures_path = str(argument)
@@ -150,7 +157,16 @@ if exists(name):
                           program=program)
             num_program = num_program + 1
     if len(positives) > 0:
-        print_pass("Positives: " + str(positives), False)
+        if not positives_file or positives_file is None:
+            print_pass("Positives: " + str(positives), False)
+        else:
+            try:
+                pfile = open(positives_file, mode="a")
+                pfile.write(str(positives))
+                pfile.close()
+            except getopt.GetoptError as error:
+                print(error)
+                sys.exit(3)
     sys.exit(0)
 else:
     print_error("\t[!] Input file does not exist or is not specified. Check -f or --file argument and try again.",

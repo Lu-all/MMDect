@@ -16,8 +16,8 @@ Code based in [MetaSign](https://github.com/LabSPY-univr/MetaSign) metamorphic r
 python merubacc.py -h -a -m {compress-only, compare-only, both} -d -p {none,both,compression,comparation} -f file -o name -s signatures_path
 ```
 
-- -h or --help to display options
-- -v or --verbose to show output (true by default)
+- -h or --help to display options.
+- -v or --verbose to show output (true by default).
 - -a or --att_syntax to write the output file in ATT syntax (Intel syntax is selected by default).
 - -m or --mode to specify mode between: compress-only (only execute compression module), compare-only (only execute
   comparation module or both (execute both modules). Both is selected by default.
@@ -25,6 +25,8 @@ python merubacc.py -h -a -m {compress-only, compare-only, both} -d -p {none,both
 - -r or --regex to enable both Regex and Prolog comparation. This option overwrites -p / --python argument.
 - -f or --file to specify input file. If not specified, it will use examples/passwddump.txt as input.
 - -o or --output to specify name of output file. If not specified, it will be < file >-compressed.< extension >.
+- -O or --positives_output to write positives to a file. If not specified, positives will be printed in standard
+  output (even in silent mode).
 - -s or --signatures to specify path of signatures parent directory, which also enables compare step. Rules for prolog
   calculation should have '.prologsign' extension, while rules extension for comparation in python must be '.txt'.
   Python rules can be in regex format.
