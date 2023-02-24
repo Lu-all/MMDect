@@ -30,7 +30,7 @@ python merubacc.py -h -a -m {compress-only, compare-only, both} -d -p {none,both
 - -s or --signatures to specify path of signatures parent directory, which also enables compare step. Rules for prolog
   calculation should have '.prologsign' extension, while rules extension for comparation in python must be '.txt'.
   Python rules can be in regex format.
-- -c or --compare-both to compare both Regex and Prolog signatures.
+- -c or --compare-both to compare both Regex and Prolog signatures (overwrites -p python in comparation).
 
 For example:
 

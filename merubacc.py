@@ -26,7 +26,7 @@ def merubacc_help() -> None:
 
            "-p or --python to execute compression, comparation or both in python instead of prolog\n"
 
-           "-r or --regex to enable both Regex and Prolog comparation. This option overwrites -p / --python argument.\n"
+           "-c or --compare-both to compare both Regex and Prolog signatures (overwrites -p python in comparation).\n"
 
            "-f or --file to specify input file. If not specified, it will use examples/passwddump.txt as input\n"
 
