@@ -82,3 +82,39 @@ For example:
 ```bash
 python merubacc.py -r --file=examples\passwddump.txt --signatures=example_signatures/ --mode=compare-only
 ```
+
+## How to make Prolog signatures
+
+Prolog signatures are a list of functors.
+Each functor is composed in the same way that instructions, i.e. instruction(type(argument1), type(argument2)).
+For example, `shr r12, 8` will be `shr(reg(r12), imm('8'))`.
+
+### Types:
+
+- Register / reg(register): r12 <--> reg(r12)
+- Immediate / imm(immediate): 8 <--> imm(8)
+- Memory / mem('address'): \[r12] <--> mem('r12')
+- Tag / tag(name): close_file <--> tag(close_file)
+
+### Variables:
+
+A variable can be defined as V or _V (in this program, values of variables defined in signatures will not be displayed).
+For example:
+
+`mov(reg(_Reg),imm('0x6477737361702FFF')),
+op(shr,reg(_Reg),imm('8'))`
+
+In this code, _Reg must have the same value in both occurrences.
+If the first _Reg is assigned the value r12, the second line must be `op(shr,reg(r12),imm('8'))` to valid the rule.
+
+### Wildcard:
+
+A wildcard whose value will not necessarily be repeated later in the code can be defined as "_".
+For example:
+
+`mov(reg(_),imm('0x6477737361702FFF')),
+op(shr,reg(_),imm('8'))`
+
+In this code, _ doesn't have to have the same value in both instances.
+If the first _ is assigned the value r12, the second line could be `op(shr,reg(r14),imm('8'))`
+and the rule would apply.
