@@ -81,7 +81,10 @@ memory(mem(A)) -->
 % tag(Tag) --> ["Tag"]
 tags(tag(A)) --> 
     [S],{
-            atom_string(A,S)
+            atom_string(A,S),
+            \+phrase(memory(A),S),
+            \+phrase(immediate(A),S),
+            \+phrase(register(A),S)
         }.
 
 % args

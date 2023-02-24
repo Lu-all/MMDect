@@ -22,6 +22,7 @@ python merubacc.py -h -a -m {compress-only, compare-only, both} -d -p {none,both
 - -m or --mode to specify mode between: compress-only (only execute compression module), compare-only (only execute
   comparation module or both (execute both modules). Both is selected by default.
 - -p or --python to execute compression, comparation or both in Python instead of Prolog (default value is none).
+- -r or --regex to enable both Regex and Prolog comparation. This option overwrites -p / --python argument.
 - -f or --file to specify input file. If not specified, it will use examples/passwddump.txt as input.
 - -o or --output to specify name of output file. If not specified, it will be < file >-compressed.< extension >.
 - -O or --positives_output to write positives to a file. If not specified, positives will be printed in standard

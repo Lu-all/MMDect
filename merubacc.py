@@ -26,6 +26,8 @@ def merubacc_help() -> None:
 
            "-p or --python to execute compression, comparation or both in python instead of prolog\n"
 
+           "-r or --regex to enable both Regex and Prolog comparation. This option overwrites -p / --python argument.\n"
+
            "-f or --file to specify input file. If not specified, it will use examples/passwddump.txt as input\n"
 
            "-o or --output to specify name of output file. If not specified, it will be <file>-compressed.<extension>\n"
@@ -74,6 +76,7 @@ python_exec = "none"
 att_syntax = False
 tag_replacement = False
 default_output = True
+regex = False
 mode = "both"
 positives = []
 name: str = example_path
@@ -107,6 +110,9 @@ for option, argument in options:
     elif option in ['-s', '--signatures']:
         print_warn("\t[+] Signatures path = " + str(argument), silent)
         signatures_path = str(argument)
+    elif option in ['-r', '--regex']:
+        prints("\t[+] Regex enabled", silent)
+        regex = True
     elif option in ['-f', '--file']:
         print_warn("\t[+] Input file = " + str(argument), silent)
         name = str(argument)
@@ -134,14 +140,14 @@ if exists(name):
     if mode == "compare-only":
         prints("[-] Comparing", silent)
         positives = compare_program(program=program, path=signatures_path, python_exec=python_exec,
-                                    iteration=0)
+                                    regex_signatures=regex, iteration=0)
     else:
         if mode == "compress-only":
             prints("[-] Compressing", silent)
             programs = compress_program(program=program, python_exec=python_exec)
         else:
             programs, positives = compress_and_compare_program(program=program, path=signatures_path,
-                                                               python_exec=python_exec)
+                                                               python_exec=python_exec, regex_signatures=regex)
         num_program = 1
         prints("[+] Writing compressed programs", silent)
         for program in programs:

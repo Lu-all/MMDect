@@ -11,7 +11,7 @@ def init_prolog() -> Prolog:
     :return: Prolog instance
     """
     prolog = Prolog()
-    prolog.consult("rules/dcg_rules.pl")
+    prolog.consult("rules/rules.pl")
     return prolog
 
 

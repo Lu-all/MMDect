@@ -52,13 +52,14 @@ def compress_program(program: Program, python_exec: str, tag_replacement=False, 
     return programs
 
 
-def compare_program(program: Program, path: str, python_exec: str,
+def compare_program(program: Program, path: str, python_exec: str, regex_signatures=False,
                     tag_replacement=False, silent=False, iteration=0) -> Set[str]:
     """
     Compare program with given signatures
     :param program: Instructions to compare
     :param path: Path to signatures
     :param python_exec: Compare in Python
+    :param regex_signatures: Enables both comparation modes (Python and Prolog)
     :param tag_replacement: True to use experimental tag substitution
     :param silent: True to hide output
     :param iteration: Iteration of program compressed
@@ -68,20 +69,31 @@ def compare_program(program: Program, path: str, python_exec: str,
         prints("[-] Comparing v." + str(iteration), silent)
     else:
         prints("[-] Comparing", silent)
-    if python_exec in ["both", "compare"]:
-        names, signatures = get_regex_signatures(path)
-        instructions = str(program.instructions).replace('"', "").replace("[[", "[").replace("]]", "]")
-        positives = get_all_coincidences(program=instructions, signatures=signatures, names=names,
-                                         experimental_rules=tag_replacement)
-    else:
+    if regex_signatures:
         names, signatures = get_prolog_signatures(path)
         signatures = reformat_signatures(signatures)
         prints("\t[+] Comparing in Prolog", silent)
-        positives = compare_prolog(program=program, signatures=signatures, names=str(names))
+        positives = compare_prolog(program, signatures, str(names))
+        names, signatures = get_regex_signatures(path)
+        instructions = str(program.instructions).replace('"', "").replace("[[", "[").replace("]]", "]")
+        positives_regex = get_all_coincidences(program=instructions, signatures=signatures, names=names,
+                                               experimental_rules=tag_replacement)
+        positives = positives.union(positives_regex)
+    else:
+        if python_exec in ["both", "compare"]:
+            names, signatures = get_regex_signatures(path)
+            instructions = str(program.instructions).replace('"', "").replace("[[", "[").replace("]]", "]")
+            positives = get_all_coincidences(program=instructions, signatures=signatures, names=names,
+                                             experimental_rules=tag_replacement)
+        else:
+            names, signatures = get_prolog_signatures(path)
+            signatures = reformat_signatures(signatures)
+            prints("\t[+] Comparing in Prolog", silent)
+            positives = compare_prolog(program, signatures, str(names))
     return positives
 
 
-def compress_and_compare_program(program: Program, path: str, python_exec: str,
+def compress_and_compare_program(program: Program, path: str, python_exec: str, regex_signatures=False,
                                  tag_replacement=False, silent=False) -> \
         tuple[List[Program], Set[str]]:
     """
@@ -89,20 +101,20 @@ def compress_and_compare_program(program: Program, path: str, python_exec: str,
     :param program: program to compress
     :param path: Path to signatures
     :param python_exec: Compare or compare in Python
+    :param regex_signatures: Enables both comparation modes (Python and Prolog)
     :param tag_replacement: True to use experimental tag substitution
     :param silent: True to hide output
     :return: List of compressed programs and set of names of rules with positive match
     """
     positives = set()
-    programs = compress_program(program=program, python_exec=python_exec, tag_replacement=tag_replacement)
+    programs = compress_program(program, python_exec, tag_replacement)
     iteration = 0
     for new_program in programs:
         iteration = iteration + 1
         if len(positives) == 0:
-            positives = compare_program(program=new_program, path=path, python_exec=python_exec,
-                                        tag_replacement=tag_replacement, silent=silent, iteration=iteration)
+            positives = compare_program(new_program, path, python_exec, regex_signatures,
+                                        tag_replacement, silent, iteration)
         else:
             positives = positives.union(
-                compare_program(program=new_program, path=path, python_exec=python_exec,
-                                tag_replacement=tag_replacement, silent=silent, iteration=iteration))
+                compare_program(new_program, path, python_exec, regex_signatures, tag_replacement, silent, iteration))
     return programs, positives
