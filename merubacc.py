@@ -48,9 +48,10 @@ command_args = sys.argv[1:]
 options: list[tuple[str, str]] = [('-f', example_path)]
 arguments: list[str] = [example_path]
 try:
-    options, arguments = getopt.getopt(command_args, "hatrvp:f:o:O:s:m:",
-                                       ["help", "att_syntax", "tag_replacement", "verbose", "python=", "file=",
-                                        "output=", "positives_output=", "signatures=", "mode=", "regex"])
+    options, arguments = getopt.getopt(command_args, "hatcvp:f:o:O:s:m:",
+                                       ["help", "att_syntax", "tag_replacement", "verbose", "compare-both", "python=",
+                                        "file=",
+                                        "output=", "positives_output=", "signatures=", "mode="])
 except getopt.GetoptError as error:
     print(error)
     sys.exit(2)
@@ -76,7 +77,7 @@ python_exec = "none"
 att_syntax = False
 tag_replacement = False
 default_output = True
-regex = False
+both_signatures = False
 mode = "both"
 positives = []
 name: str = example_path
@@ -110,9 +111,9 @@ for option, argument in options:
     elif option in ['-s', '--signatures']:
         print_warn("\t[+] Signatures path = " + str(argument), silent)
         signatures_path = str(argument)
-    elif option in ['-r', '--regex']:
-        prints("\t[+] Regex enabled", silent)
-        regex = True
+    elif option in ['-c', '--compare-both']:
+        prints("\t[+] Both types of signatures will be used.", silent)
+        both_signatures = True
     elif option in ['-f', '--file']:
         print_warn("\t[+] Input file = " + str(argument), silent)
         name = str(argument)
@@ -140,14 +141,14 @@ if exists(name):
     if mode == "compare-only":
         prints("[-] Comparing", silent)
         positives = compare_program(program=program, path=signatures_path, python_exec=python_exec,
-                                    regex_signatures=regex, iteration=0)
+                                    both_signatures=both_signatures, iteration=0)
     else:
         if mode == "compress-only":
             prints("[-] Compressing", silent)
             programs = compress_program(program=program, python_exec=python_exec)
         else:
             programs, positives = compress_and_compare_program(program=program, path=signatures_path,
-                                                               python_exec=python_exec, regex_signatures=regex)
+                                                               python_exec=python_exec, both_signatures=both_signatures)
         num_program = 1
         prints("[+] Writing compressed programs", silent)
         for program in programs:
