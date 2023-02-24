@@ -52,14 +52,14 @@ def compress_program(program: Program, python_exec: str, tag_replacement=False, 
     return programs
 
 
-def compare_program(program: Program, path: str, python_exec: str, regex_signatures=False,
+def compare_program(program: Program, path: str, python_exec: str, both_signatures=False,
                     tag_replacement=False, silent=False, iteration=0) -> Set[str]:
     """
     Compare program with given signatures
     :param program: Instructions to compare
     :param path: Path to signatures
     :param python_exec: Compare in Python
-    :param regex_signatures: Enables both comparation modes (Python and Prolog)
+    :param both_signatures: Enables both comparation modes (Python and Prolog)
     :param tag_replacement: True to use experimental tag substitution
     :param silent: True to hide output
     :param iteration: Iteration of program compressed
@@ -69,7 +69,7 @@ def compare_program(program: Program, path: str, python_exec: str, regex_signatu
         prints("[-] Comparing v." + str(iteration), silent)
     else:
         prints("[-] Comparing", silent)
-    if regex_signatures:
+    if both_signatures:
         names, signatures = get_prolog_signatures(path)
         signatures = reformat_signatures(signatures)
         prints("\t[+] Comparing in Prolog", silent)
@@ -93,7 +93,7 @@ def compare_program(program: Program, path: str, python_exec: str, regex_signatu
     return positives
 
 
-def compress_and_compare_program(program: Program, path: str, python_exec: str, regex_signatures=False,
+def compress_and_compare_program(program: Program, path: str, python_exec: str, both_signatures=False,
                                  tag_replacement=False, silent=False) -> \
         tuple[List[Program], Set[str]]:
     """
@@ -101,7 +101,7 @@ def compress_and_compare_program(program: Program, path: str, python_exec: str, 
     :param program: program to compress
     :param path: Path to signatures
     :param python_exec: Compare or compare in Python
-    :param regex_signatures: Enables both comparation modes (Python and Prolog)
+    :param both_signatures: Enables both comparation modes (Python and Prolog)
     :param tag_replacement: True to use experimental tag substitution
     :param silent: True to hide output
     :return: List of compressed programs and set of names of rules with positive match
@@ -112,9 +112,9 @@ def compress_and_compare_program(program: Program, path: str, python_exec: str, 
     for new_program in programs:
         iteration = iteration + 1
         if len(positives) == 0:
-            positives = compare_program(new_program, path, python_exec, regex_signatures,
+            positives = compare_program(new_program, path, python_exec, both_signatures,
                                         tag_replacement, silent, iteration)
         else:
             positives = positives.union(
-                compare_program(new_program, path, python_exec, regex_signatures, tag_replacement, silent, iteration))
+                compare_program(new_program, path, python_exec, both_signatures, tag_replacement, silent, iteration))
     return programs, positives
