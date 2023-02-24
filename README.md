@@ -22,7 +22,6 @@ python merubacc.py -h -a -m {compress-only, compare-only, both} -d -p {none,both
 - -m or --mode to specify mode between: compress-only (only execute compression module), compare-only (only execute
   comparation module or both (execute both modules). Both is selected by default.
 - -p or --python to execute compression, comparation or both in Python instead of Prolog (default value is none).
-- -r or --regex to enable both Regex and Prolog comparation. This option overwrites -p / --python argument.
 - -f or --file to specify input file. If not specified, it will use examples/passwddump.txt as input.
 - -o or --output to specify name of output file. If not specified, it will be < file >-compressed.< extension >.
 - -O or --positives_output to write positives to a file. If not specified, positives will be printed in standard
@@ -71,7 +70,7 @@ specified, each compressed version of a program obtained in compression step wil
 In python mode, signatures will be compared using regex. Regex signatures must have '.txt' extension.
 In prolog mode (default), signatures will be compared as Functors. Prolog signatures must have '.prologsign' extension.
 
-Both signatures type can be compared if -r / --regex argument is specified.
+Both signatures type can be compared if -c / --compare_both argument is specified.
 
 | Regex signature                                   | Prolog signature                         |
 |---------------------------------------------------|------------------------------------------|
@@ -80,5 +79,41 @@ Both signatures type can be compared if -r / --regex argument is specified.
 For example:
 
 ```bash
-python merubacc.py -r --file=examples\passwddump.txt --signatures=example_signatures/ --mode=compare-only
+python merubacc.py -c --file=examples\passwddump.txt --signatures=example_signatures/ --mode=compare-only
 ```
+
+## How to make Prolog signatures
+
+Prolog signatures are a list of functors.
+Each functor is composed in the same way that instructions, i.e. instruction(type(argument1), type(argument2)).
+For example, `shr r12, 8` will be `shr(reg(r12), imm('8'))`.
+
+### Types:
+
+- Register / reg(register): r12 <--> reg(r12)
+- Immediate / imm(immediate): 8 <--> imm(8)
+- Memory / mem('address'): \[r12] <--> mem('r12')
+- Tag / tag(name): close_file <--> tag(close_file)
+
+### Variables:
+
+A variable can be defined as V or _V (in this program, values of variables defined in signatures will not be displayed).
+For example:
+
+`mov(reg(_Reg),imm('0x6477737361702FFF')),
+op(shr,reg(_Reg),imm('8'))`
+
+In this code, _Reg must have the same value in both occurrences.
+If the first _Reg is assigned the value r12, the second line must be `op(shr,reg(r12),imm('8'))` to valid the rule.
+
+### Wildcard:
+
+A wildcard whose value will not necessarily be repeated later in the code can be defined as "_".
+For example:
+
+`mov(reg(_),imm('0x6477737361702FFF')),
+op(shr,reg(_),imm('8'))`
+
+In this code, _ doesn't have to have the same value in both instances.
+If the first _ is assigned the value r12, the second line could be `op(shr,reg(r14),imm('8'))`
+and the rule would apply.
