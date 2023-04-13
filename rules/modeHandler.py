@@ -59,7 +59,7 @@ def compare_program(program: Program, path: str, python_exec: str, both_signatur
     :param program: Instructions to compare
     :param path: Path to signatures
     :param python_exec: Compare in Python
-    :param both_signatures: Enables both comparation modes (Python and Prolog)
+    :param both_signatures: Enables both comparison modes (Python and Prolog)
     :param tag_replacement: True to use experimental tag substitution
     :param silent: True to hide output
     :param iteration: Iteration of program compressed
@@ -101,7 +101,7 @@ def compress_and_compare_program(program: Program, path: str, python_exec: str, 
     :param program: program to compress
     :param path: Path to signatures
     :param python_exec: Compare or compare in Python
-    :param both_signatures: Enables both comparation modes (Python and Prolog)
+    :param both_signatures: Enables both comparison modes (Python and Prolog)
     :param tag_replacement: True to use experimental tag substitution
     :param silent: True to hide output
     :return: List of compressed programs and set of names of rules with positive match

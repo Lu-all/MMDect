@@ -20,13 +20,13 @@ def merubacc_help() -> None:
            "-v or --verbose to show output (true by default)\n"
 
            "-m or --mode to specify mode between: compress-only (only execute compression module), compare-only"
-           " (only execute comparation module or both (execute both modules). Both is selected by default.\n"
+           " (only execute comparison module or both (execute both modules). Both is selected by default.\n"
 
            "-a or --att_syntax to write the output file in ATT syntax (Intel syntax is selected by default)\n"
 
-           "-p or --python to execute compression, comparation or both in python instead of prolog\n"
+           "-p or --python to execute compression, comparison or both in python instead of prolog\n"
 
-           "-c or --compare-both to compare both Regex and Prolog signatures (overwrites -p python in comparation).\n"
+           "-c or --compare-both to compare both Regex and Prolog signatures (overwrites -p python in comparison).\n"
 
            "-f or --file to specify input file. If not specified, it will use examples/passwddump.txt as input\n"
 
@@ -37,7 +37,7 @@ def merubacc_help() -> None:
 
            "-s or --signatures to specify path of signatures parent directory, which also enables compare step."
            "Rules for prolog calculation should have '.prologsign' extension, "
-           "while rules extension for comparation in python must be '.txt'. Python rules can be in regex format.\n",
+           "while rules extension for comparison in python must be '.txt'. Python rules can be in regex format.\n",
            silent)
 
 

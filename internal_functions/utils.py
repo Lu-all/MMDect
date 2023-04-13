@@ -114,7 +114,7 @@ def is_immediate(program: Program, operand: str | None) -> bool:
 def reformat_signatures(signatures: list[list[str]]) -> str:
     """
     Reformat signatures to evade regex and string shenanigans
-    :param signatures: Signatures that may fail in comparation
+    :param signatures: Signatures that may fail in comparison
     :return: Signatures with evaded regex and string shenanigans
     """
     new_signatures = []
