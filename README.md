@@ -1,4 +1,4 @@
-# Metamorphic Rules Based code Compressor and Comparison
+# Metamorphic Rules Based code Compressor and Comparator
 
 Code based in [MetaSign](https://github.com/LabSPY-univr/MetaSign) metamorphic rules in compression mode.
 
