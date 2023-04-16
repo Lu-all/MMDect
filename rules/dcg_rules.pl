@@ -60,7 +60,7 @@ immediate(imm(I)) --> [A], {(nonvar(I);nonvar(A)),number_string(I,A)}.
 % MEM
 
 % mem('Mem') --> ["[Mem]"]
-memory(mem(A)) --> 
+memory(mem(A)) -->
     [S],{
         nonvar(A),
         atom_string(A,S1),
@@ -69,7 +69,7 @@ memory(mem(A)) -->
         }.
 
 % mem(Mem) <-- ["[Mem]"]
-memory(mem(A)) --> 
+memory(mem(A)) -->
     [S],{
             nonvar(S),
             string_concat("[",S1,S),
@@ -79,7 +79,7 @@ memory(mem(A)) -->
 
 % TAG
 % tag(Tag) --> ["Tag"]
-tags(tag(A)) --> 
+tags(tag(A)) -->
     [S],{
             atom_string(A,S)
         }.
@@ -94,7 +94,7 @@ arguments([A]) --> argument(A).
 arguments([A|As]) --> argument(A), arguments(As).
 
 % instruction
-operation(Operand, Args):-
+operation(Operand, O, Args):-
     Operand =.. [O|Args], nth0(_,[add,cmp,sub,and,xor,test,lea,shl,shr],O).
 
 command(add) --> ["add"].
@@ -131,7 +131,7 @@ command(tag(A)) -->
         string_concat(T1,":",T)
         }.
 
-command(tag(A)) --> 
+command(tag(A)) -->
     [T],{
             nonvar(T),
             string_concat(T1,":",T),
@@ -160,7 +160,7 @@ check(L, M):-
 
 %%%%%%%
 %Parse%
-%%%%%%%  
+%%%%%%%
 
 % Parse flow:
 % [["i", "a1", "a2"]["i","a"]] <--> [i[a1,a2], i[a]] <--> [i(a1,a2), i(a)]
@@ -240,8 +240,11 @@ my_flatten([X|Xs], [Y|Ys]):-
 % Arg -> arg literal, Arg variable. Arg = Arg, Arg =\= Arg2.
 % syntax
 % rule(<name>, [<i>], [<o>]).
-%xor -> xorr
-  
+
+% operations
+% operation(op(R1, R2), op, [R1, R2])
+% R1 xor R2 == xor(R1, R2)
+
 % PUSH rules
 rule(g1, [push(imm(Imm)), pop(reg(Reg))], [mov(reg(Reg), imm(Imm))]).
 rule(g2, [push(reg(Reg)), pop(reg(Reg2))], [mov(reg(Reg2), reg(Reg))]).
@@ -251,14 +254,14 @@ rule(g13, [push(reg(Reg)), 'ret'], [jmp(reg(Reg))]).
 rule(g3, [mov(mem(Mem), imm(Imm)), push(mem(Mem))], [push(imm(Imm))]).
 rule(g4, [mov(mem(Mem), reg(Reg)), push(mem(Mem))], [push(reg(Reg))]).
 
-rule(g7, [mov(mem(Mem), imm(Imm)), Opi], Opo):-
-    operation(Opi,[reg(Reg),mem(Mem)]),
-    operation(Opo,[reg(Reg),imm(Imm)]).
-    
-rule(g8, [mov(mem(Mem2), mem(Mem)), Opi], Opo):-
-    operation(Opi,[reg(Reg),mem(Mem2)]),
-    operation(Opo,[reg(Reg),mem(Mem)]).
-  
+rule(g7, [mov(mem(Mem), imm(Imm)), Opi], [Opo]):-
+    operation(Opi, O, [reg(Reg),mem(Mem)]),
+    operation(Opo, O, [reg(Reg),imm(Imm)]).
+
+rule(g8, [mov(mem(Mem2), mem(Mem)), Opi], [Opo]):-
+    operation(Opi, O, [reg(Reg),mem(Mem2)]),
+    operation(Opo, O, [reg(Reg),mem(Mem)]).
+
 rule(g10, [mov(mem(Mem), reg(Reg)), call(mem(Mem))], [call(reg(Reg))]).
 rule(g11, [mov(mem(Mem2), mem(Mem)), call(mem(Mem2))], [call(mem(Mem))]).
 
@@ -305,7 +308,7 @@ compare(_,_,[],[]).
 compare(Program, Firms, Names, Positives):-
     parser(Program, Parsed),
     compare_firms(Parsed, Firms, Names, Positives).
-  
+
 rules(Result,[], Result).
 
 rules(Program_before,[Last], Result):-
@@ -319,7 +322,7 @@ rules(Program_before, [N1,N2|Program_next], Result) :-
 rules(Program_before, [N1,N2|Program_next], Result) :-
     append(Program_before, [N1], New_program_before),
     rules(New_program_before, [N2|Program_next], Result).
-  
+
 compare_firms([], _,_, []).
 compare_firms(_,[],_,[]).
 
@@ -335,7 +338,7 @@ compare_firms([Line|Program], [Firm|Firms], [Name|Names], Positives):-
     append(New_positives_a, New_positives_b, New_positives),
     compare_firm([Line|Program], Firm, Name, Positive),
     append(New_positives, Positive, Positives),!.
-  
+
 
 %%%%%%%%%%
 %Examples%
@@ -349,22 +352,22 @@ etc_shadow_sign([
     shl(reg(Reg),imm(32)),
     push(reg(Reg))
     ]).
-  
+
 compressed_test([
     mov(mem('123'), imm(_Imm)),
     push(mem('123')),
     push(imm(_Imm2)),
     mov(reg(r13), imm(_Imm3))
     ]).
-  
-    
+
+
 original_test([
     mov(mem('123'),
     imm(7239381865414537215)),
     push(mem('123')),
     push(imm(12))
     ]).
-  
+
 test([
     ["mov", "[123]","0x6477737361702FFF"],
     ["push", "[123]"],
@@ -372,10 +375,10 @@ test([
     ["pop", "r12"],
     ["push", "r12"],
     ["mov", "r13", "13"],
-    ["mov", "r12", "0xFFFFFFFF6374652F"],
-    ["xor", "rax", "rax"]
+    ["mov", "[12]", "0xFFFFFFFF6374652F"],
+    ["xor", "r12", "[12]"]
     ]).
-      
+
 test_special([
     ["mov", "[123]","0x6477737361702FFF"],
     ["push", "[123]"],
@@ -388,7 +391,7 @@ test_special([
     ["jne", "loop_read"],
     ["close_file:"]
     ]).
-    
+
 test_long([
     ["mov", "r12", "0x6477737361702FFF"],
     ["shr", "r12", "8"],
@@ -438,12 +441,12 @@ test_long([
     ["mov", "rax", "r14"],
     ["syscall"]
     ]).
-  
-  
+
+
 /** <examples>
  ?- test_special(L), parser(L, P), parser(L1,P).
  ?- test(P), compress(P, Result).
  ?- test_long(P), etc_shadow_sign(R),compress_and_compare(P,C, [R], ['etc/shadow'], Positives).
  ?- test(P), etc_shadow_sign(R1), test_sign(R2), compress_and_compare(P, R, [R1,R2], ['etc/shadow','test'], Positives).
- ?- test(P), etc_shadow_sign(R1), test_sign(R2), test_cmp(R3), compress_and_compare(P, R, [R1,R2,R3], ['etc/shadow','test', 'original'], Positives), \+length(Positives, 0).
+ ?- test(P), etc_shadow_sign(R1), compressed_test(R2), original_test(R3), compress_and_compare(P, R, [R1,R2,R3], ['etc/shadow','test', 'original'], Positives), \+length(Positives, 0).
  */

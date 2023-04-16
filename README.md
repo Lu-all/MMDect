@@ -30,6 +30,8 @@ python merubacc.py -h -a -m {compress-only, compare-only, both} -d -p {none,both
   calculation should have '.prologsign' extension, while rules extension for comparison in python must be '.txt'.
   Python rules can be in regex format.
 - -c or --compare-both to compare both Regex and Prolog signatures (overwrites -p python in comparison).
+- -M or --multiple_input to input multiple files, giving the path to the directory (it uses recursion) in the -f
+  parameter.
 
 For example:
 

@@ -2,7 +2,7 @@ import re
 from typing import List, Set
 
 from internal_functions.IOHandler import get_prolog_signatures, get_regex_signatures
-from internal_functions.colored import prints
+from internal_functions.colored import prints, print_pass
 from internal_functions.program import Program
 from internal_functions.utils import reformat_signatures
 from rules.prologHandler import compress_prolog, compare_prolog
@@ -90,6 +90,7 @@ def compare_program(program: Program, path: str, python_exec: str, both_signatur
             signatures = reformat_signatures(signatures)
             prints("\t[+] Comparing in Prolog", silent)
             positives = compare_prolog(program, signatures, str(names))
+    print_pass("Positives iteration n:" + str(iteration) + " - " + str(positives), silent)
     return positives
 
 
@@ -116,5 +117,6 @@ def compress_and_compare_program(program: Program, path: str, python_exec: str, 
                                         tag_replacement, silent, iteration)
         else:
             positives = positives.union(
-                compare_program(new_program, path, python_exec, both_signatures, tag_replacement, silent, iteration))
+                compare_program(new_program, path, python_exec, both_signatures, tag_replacement, silent,
+                                iteration))
     return programs, positives

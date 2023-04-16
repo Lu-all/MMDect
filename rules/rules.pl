@@ -47,16 +47,8 @@ mem(X) :-
     number_chars(B, B1), append(['['],B1, X1), append(X1, [']'], X2), 
     atom_chars(X, X2).
 
-% OP
-op_type(cmp).
-op_type(add).
-op_type(sub).
-op_type(and).
-op_type(xor).
-op_type(test).
-op_type(lea).
-op_type(shl).
-op_type(shr).
+operation(Operand, O, Args):-
+    Operand =.. [O|Args], nth0(_,[add,cmp,sub,and,xor,test,lea,shl,shr],O).
 
 %%%%%%
 %Type%
@@ -87,7 +79,12 @@ asign(P,R):-
     imm(P), R=imm(P),!.
 
 asign(P,R):-
-    mem(P), R=mem(P),!.
+    mem(P),
+    string_chars(P,C),
+    delete(C, '[', C1),
+    delete(C1, ']', C2),
+    atom_chars(A, C2),
+    R=mem(A),!.
 
 asign(P,P).
 
@@ -113,65 +110,59 @@ check(L, M):-
 
 %%%%%%%
 %Parse%
-%%%%%%%  
+%%%%%%%
 
-% Output number, not atom
+% "i" <-> i
+% Output number, not atom (in immediates)
 string_atom(S,A):-
     var(A),
     number_string(A,S),
     !.
 
-% Force string output in hex
 string_atom(S,A):-
     var(S),
-    number(A),
-    format(string(S), "0x~|~16R",A),
-    !.
+    number(A), number_string(A,S), !.
 
+% Output atom
 string_atom(S,A):-
     atom_string(A,S).
 
+% ["i", "a1", "a2"] <-> [i,a1,a2]
 list_string_list_atom([],[]).
 
 list_string_list_atom([S|Ss],[A|As]):-
     list_string_list_atom(Ss, As),
     string_atom(S,A).
 
+% [["i", "a1", "a2"]["i","a"]] <->  [[i,a1,a2], [i,a]]
 matrix_string_matrix_atom([],[]).
 
 matrix_string_matrix_atom([S|Ss],[A|As]):-
     matrix_string_matrix_atom(Ss, As),
     list_string_list_atom(S, A).
 
-% Matrix of atoms -> Array of Functors
-parser([], []).
+% [i, a1, a2] <-> i(a1, a2)
+atom_functor(X,Y):-
+    Y =.. X.
 
-parser([[X1, A1, A2]|Xs], [Y|Ys]) :-
-    op_type(X1),
-    parser(Xs, Ys),
-    Y = op(X1,A1, A2), !.
+% [[i, a1, a2], [i, a] <->  [i(a1,a2), i(a)]
+matrix_atom_array_functor([], []).
 
-parser([X|Xs], [Y|Ys]) :-
-	parser(Xs, Ys),
-	Y =.. X.
+matrix_atom_array_functor([X|Xs], [Y|Ys]) :-
+	matrix_atom_array_functor(Xs, Ys),
+	atom_functor(X,Y).
 
-% Matrix of str <- Array of Functors
-re_parser([], []).
-
-re_parser([X|Xs], [Y|Ys]) :-
-	re_parser(Xs, Ys),
-    parser(X1,[Y]),
-    nth0(0, X1,X).
-
-% Parse to matrix of functors
+% [["i", "a1", "a2"]["i","a"]] -> [i(a1,a2), i(a)]
 parse(Program, Parsed):-
+    nonvar(Program),
     matrix_string_matrix_atom(Program, Atom_program),
-	parser(Atom_program,Parsed).
+	matrix_atom_array_functor(Atom_program,Parsed), !.
 
-% Parse to matrix of string
-re_parse(Parsed, Result):-
-    re_parser(Atoms, Parsed),
-    matrix_string_matrix_atom(Result, Atoms).
+% [["i", "a1", "a2"]["i","a"]] <- [i(a1,a2), i(a)]
+parse(Program, Parsed):-
+    nonvar(Parsed),
+    matrix_atom_array_functor(Atoms, Parsed),
+    matrix_string_matrix_atom(Program, Atoms), !.
 
 %%%%%%%
 %Rules%
@@ -182,8 +173,8 @@ re_parse(Parsed, Result):-
 % rule(<name>, [<i>], [<o>]) :- types (reg, imm, mem)
 
 % operations
-% op(<op>, <arg1, <arg2)
-% xor rax rbx <-> op(xor, rax, rbx)
+% operation(op(R1, R2), op, [R1, R2])
+% R1 xor R2 == xor(R1, R2)
 
 % PUSH rules
 rule(g1, [push(Imm), pop(Reg)], [mov(Reg, Imm)]) :- imm(Imm), reg(Reg).
@@ -194,8 +185,15 @@ rule(g13, [push(Reg), 'ret'], [jmp(Reg)]) :- reg(Reg).
 rule(g3, [mov(Mem, Imm), push(Mem)], [push(Imm)]) :- mem(Mem), imm(Imm).
 rule(g4, [mov(Mem, Reg), push(Mem)], [push(Reg)]) :- reg(Reg), mem(Mem).
 
-rule(g7, [mov(Mem, Imm), op(_,Reg,Mem)], [op(_,Reg,Imm)]):- mem(Mem), imm(Imm), reg(Reg).
-rule(g8, [mov(Mem2, Mem), op(_,Reg, Mem2)], [op(_,Reg,Mem)]) :- mem(Mem), mem(Mem2), reg(Reg).
+rule(g7, [mov(Mem, Imm), Op1], [Op2]):-
+    operation(Op1, O, [Reg, Mem]),
+    operation(Op2, O, [Reg,Imm]),
+    mem(Mem), imm(Imm), reg(Reg), nonvar(O).
+
+rule(g8, [mov(Mem2, Mem), Op1], [Op2]) :-
+    operation(Op1, O, [Reg, Mem2]),
+    operation(Op2, O, [Reg,Mem]),
+    mem(Mem), mem(Mem2), reg(Reg).
 
 rule(g10, [mov(Mem, Reg), call(Mem)], [call(Reg)]) :- mem(Mem), reg(Reg).
 rule(g11, [mov(Mem2, Mem), call(Mem2)], [call(Mem)]) :- mem(Mem), mem(Mem2).
@@ -229,16 +227,16 @@ compress_and_compare(_,_,_,[],[]).
 compress_and_compare(Program, Compressed, Firms, Names, Positives):-
 	parse(Program, Parsed), % Parse to Functors
 	rules([], Parsed, Compressed),% Apply rules
-    re_parser(Array_program,Compressed),
+    matrix_atom_array_functor(Array_program,Compressed),
     type(Array_program, Typed_program),
-    parser(Typed_program, Result),
+    matrix_atom_array_functor(Typed_program, Result),
     compare_firms(Result, Firms, Names, Positives).
 
 compress([],[]).
 compress(Program, Result) :-
 	parse(Program, Parsed), % Parse to Functors
 	rules([], Parsed, New_program), % Apply rules
-    re_parse(New_program, Result).
+    parse(Result, New_program).
 
 compare([],_,_,[]).
 compare(_,[],_,[]).
@@ -246,7 +244,7 @@ compare(_,_,[],[]).
 compare(Program, Firms, Names, Positives):-
     matrix_string_matrix_atom(Program, Atoms),
     type(Atoms, Typed_atoms),
-    parser(Typed_atoms, Result),
+    matrix_atom_array_functor(Typed_atoms, Result),
     compare_firms(Result, Firms, Names, Positives).
 
 rules(Result,[], Result).
@@ -292,15 +290,15 @@ etc_shadow_sign([
     shl(reg(Reg),imm(32)),
     push(reg(Reg))
     ]).
-  
+
 compressed_test([
     mov(mem('123'), imm(_Imm)),
     push(mem('123')),
     push(imm(_Imm2)),
     mov(reg(r13), imm(_Imm3))
     ]).
-  
-    
+
+
 original_test([
     mov(mem('123'),
     imm(7239381865414537215)),
@@ -315,10 +313,10 @@ test([
     ["pop", "r12"],
     ["push", "r12"],
     ["mov", "r13", "13"],
-    ["mov", "r12", "0xFFFFFFFF6374652F"],
-    ["xor", "rax", "rax"]
+    ["mov", "[12]", "0xFFFFFFFF6374652F"],
+    ["xor", "r12", "[12]"]
     ]).
-        
+
 test_special([
     ["mov", "[123]","0x6477737361702FFF"],
     ["push", "[123]"],
@@ -331,7 +329,7 @@ test_special([
     ["jne", "loop_read"],
     ["close_file:"]
     ]).
-    
+
 test_long([
     ["mov", "r12", "0x6477737361702FFF"],
     ["shr", "r12", "8"],
@@ -384,9 +382,8 @@ test_long([
 
 
 /** <examples>
- ?- test_special(L), parser(L, P), parser(L1,P).
+ ?- test_special(L), matrix_atom_array_functor(L, P), matrix_atom_array_functor(L1,P).
  ?- test(P), compress(P, Result).
  ?- test_long(P), etc_shadow_sign(R),compress_and_compare(P,C, [R], ['etc/shadow'], Positives).
- ?- test(P), etc_shadow_sign(R1), test_sign(R2), compress_and_compare(P, R, [R1,R2], ['etc/shadow','test'], Positives).
- ?- test(P), etc_shadow_sign(R1), test_sign(R2), test_cmp(R3), compress_and_compare(P, R, [R1,R2,R3], ['etc/shadow','test', 'original'], Positives), \+length(Positives, 0).
+ ?- test(P), etc_shadow_sign(R1), compressed_test(R2), original_test(R3), compress_and_compare(P, R, [R1,R2,R3], ['etc/shadow','test', 'original'], Positives), \+length(Positives, 0).
  */

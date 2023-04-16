@@ -1,8 +1,10 @@
+import os
 import sys
 from os.path import exists
 from pathlib import Path
 from typing import List
 
+from internal_functions.colored import print_error
 from internal_functions.program import Program
 from internal_functions.utils import is_instruction, is_register, is_immediate, is_conditional_branch, is_branch
 
@@ -94,10 +96,34 @@ def write_program(program: Program, name: str, att_syntax: bool, use_tag_replace
     f.close()
 
 
-def read_program(name: str, tag_replace_to_numbers=False) -> Program:
+def read_programs(path: str, multiple_input: bool, silent: bool) -> List[Program]:
+    """
+
+
+    :param path: Path where files are located
+    :param multiple_input: True if multiple files are given as an input
+    :param silent: True to hide output
+    :return:  List of Programs transformed to intermediate language
+    """
+    programs = []
+    if multiple_input:
+        for filename in os.listdir(path):
+            if filename.endswith(".txt"):
+                programs.append(read_program(path + "/" + filename, silent))
+    else:
+        programs.append(read_program(path, silent))
+    if len(programs) == 0:
+        print_error("Error: the given directory is empty or it has been an unexpected error reading files.\n"
+                    "Warning: files must have .txt extension", silent)
+        sys.exit()
+    return programs
+
+
+def read_program(name: str, silent: bool, tag_replace_to_numbers=False) -> Program:
     """
     Read file specified and parse it to program
     :param name: name of file where program is written
+    :param silent: True to hide output
     :param tag_replace_to_numbers: True to use experimental tag substitution
     :return: program
     """
@@ -147,5 +173,5 @@ def read_program(name: str, tag_replace_to_numbers=False) -> Program:
         file.close()
         return program
     except IOError:
-        print("Error: file could not be read")
+        print_error("Error: file could not be read", silent=silent)
         sys.exit()
