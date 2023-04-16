@@ -2,7 +2,7 @@ import getopt
 import sys
 from os.path import exists
 
-from internal_functions.IOHandler import read_program, write_program
+from internal_functions.IOHandler import write_program, read_programs
 from internal_functions.colored import print_error, print_pass, print_warn, print_banner, prints
 from rules.modeHandler import compress_program, compress_and_compare_program, compare_program
 
@@ -48,10 +48,10 @@ command_args = sys.argv[1:]
 options: list[tuple[str, str]] = [('-f', example_path)]
 arguments: list[str] = [example_path]
 try:
-    options, arguments = getopt.getopt(command_args, "hatcvp:f:o:O:s:m:",
-                                       ["help", "att_syntax", "tag_replacement", "verbose", "compare-both", "python=",
-                                        "file=",
-                                        "output=", "positives_output=", "signatures=", "mode="])
+    options, arguments = getopt.getopt(command_args, "hatcvMp:f:o:O:s:m:",
+                                       ["help", "att_syntax", "tag_replacement", "verbose", "compare-both",
+                                        "multiple_input", "python=", "file=", "output=", "positives_output=",
+                                        "signatures=", "mode="])
 except getopt.GetoptError as error:
     print(error)
     sys.exit(2)
@@ -78,8 +78,10 @@ att_syntax = False
 tag_replacement = False
 default_output = True
 both_signatures = False
+multiple_input = False
 mode = "both"
-positives = []
+positives = set()
+input_programs = []
 name: str = example_path
 name_output = example_path + "-compressed.txt"
 signatures_path = "example_signatures/"
@@ -115,14 +117,16 @@ for option, argument in options:
         prints("\t[+] Both types of signatures will be used.", silent)
         both_signatures = True
     elif option in ['-f', '--file']:
-        print_warn("\t[+] Input file = " + str(argument), silent)
+        print_warn("\t[+] Input file / dir = " + str(argument), silent)
         name = str(argument)
+    elif option in ['-M', '--multiple_input']:
+        multiple_input = True
     elif option in ['-h', '--help']:
         prints("[+] Help: ", silent)
         merubacc_help()
 if exists(name):
-    prints("[+] Reading program", silent)
-    program = read_program(name=name)
+    prints("[+] Reading program/s", silent)
+    input_programs = read_programs(path=name, multiple_input=multiple_input, silent=silent)
     if default_output:
         name_output_array = name.split('.')
         extension = name_output_array[-1]
@@ -140,14 +144,25 @@ if exists(name):
             name_without_extension = name_without_extension + '.' + cut
     if mode == "compare-only":
         prints("[-] Comparing", silent)
-        positives = compare_program(program=program, path=signatures_path, python_exec=python_exec,
-                                    both_signatures=both_signatures, iteration=0)
+        iteration = 0
+        for program in input_programs:
+            positives = positives.union(compare_program(program=program, path=signatures_path, python_exec=python_exec,
+                                                        both_signatures=both_signatures, iteration=iteration))
+            iteration = iteration + 1
     else:
         if mode == "compress-only":
             prints("[-] Compressing", silent)
-            programs = compress_program(program=program, python_exec=python_exec)
+            if len(input_programs) > 1:
+                print_warn(
+                    "Multiple input programs selected not supported for compression, defaulting to the first one found."
+                    , silent)
+            programs = compress_program(program=input_programs[0], python_exec=python_exec)
         else:
-            programs, positives = compress_and_compare_program(program=program, path=signatures_path,
+            if len(input_programs) > 1:
+                print_warn(
+                    "Multiple input programs selected not supported for compression, defaulting to the first one found."
+                    , silent)
+            programs, positives = compress_and_compare_program(program=input_programs[0], path=signatures_path,
                                                                python_exec=python_exec, both_signatures=both_signatures)
         num_program = 1
         prints("[+] Writing compressed programs", silent)
