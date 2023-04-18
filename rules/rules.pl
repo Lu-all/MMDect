@@ -115,63 +115,55 @@ check(L, M):-
 %Parse%
 %%%%%%%  
 
-% Output number, not atom
+% "i" <-> i
+% Output number, not atom in immediates
 string_atom(S,A):-
-    var(A),
-    number_string(A,S),
-    !.
+    number_string(A,S),!.
 
-% Force string output in hex
-string_atom(S,A):-
-    var(S),
-    number(A),
-    format(string(S), "0x~|~16R",A),
-    !.
-
+% Output atom
 string_atom(S,A):-
     atom_string(A,S).
 
+% ["i", "a1", "a2"] <-> [i,a1,a2]
 list_string_list_atom([],[]).
 
 list_string_list_atom([S|Ss],[A|As]):-
     list_string_list_atom(Ss, As),
     string_atom(S,A).
 
+% [["i", "a1", "a2"]["i","a"]] <->  [[i,a1,a2], [i,a]]
 matrix_string_matrix_atom([],[]).
 
 matrix_string_matrix_atom([S|Ss],[A|As]):-
     matrix_string_matrix_atom(Ss, As),
     list_string_list_atom(S, A).
 
-% Matrix of atoms -> Array of Functors
-parser([], []).
-
-parser([[X1, A1, A2]|Xs], [Y|Ys]) :-
+% [i, a1, a2] <-> i(a1, a2)
+atom_functor([X1, A1, A2],Y):-
     op_type(X1),
-    parser(Xs, Ys),
     Y = op(X1,A1, A2), !.
 
-parser([X|Xs], [Y|Ys]) :-
-	parser(Xs, Ys),
-	Y =.. X.
+atom_functor(X,Y):-
+    Y =.. X.
 
-% Matrix of str <- Array of Functors
-re_parser([], []).
+% [[i, a1, a2], [i, a] <->  [i(a1,a2), i(a)]
+matrix_atom_array_functor([], []).
 
-re_parser([X|Xs], [Y|Ys]) :-
-	re_parser(Xs, Ys),
-    parser(X1,[Y]),
-    nth0(0, X1,X).
+matrix_atom_array_functor([X|Xs], [Y|Ys]) :-
+	matrix_atom_array_functor(Xs, Ys),
+	atom_functor(X,Y).
 
-% Parse to matrix of functors
+% [["i", "a1", "a2"]["i","a"]] -> [i(a1,a2), i(a)]
 parse(Program, Parsed):-
+    nonvar(Program),
     matrix_string_matrix_atom(Program, Atom_program),
-	parser(Atom_program,Parsed).
+	matrix_atom_array_functor(Atom_program,Parsed), !.
 
-% Parse to matrix of string
-re_parse(Parsed, Result):-
-    re_parser(Atoms, Parsed),
-    matrix_string_matrix_atom(Result, Atoms).
+% [["i", "a1", "a2"]["i","a"]] <- [i(a1,a2), i(a)]
+parse(Program, Parsed):-
+    nonvar(Parsed),
+    matrix_atom_array_functor(Atoms, Parsed),
+    matrix_string_matrix_atom(Program, Atoms), !.
 
 %%%%%%%
 %Rules%
