@@ -1,4 +1,4 @@
-# Metamorphic Rules Based code Compressor and Comparator
+# MMDect: Metamorphic Malware Detection Using Logic Programming
 
 Code based in [MetaSign](https://github.com/LabSPY-univr/MetaSign) metamorphic rules in compression mode.
 
@@ -13,7 +13,7 @@ Code based in [MetaSign](https://github.com/LabSPY-univr/MetaSign) metamorphic r
 ## How to use it
 
 ```bash
-python merubacc.py -h -a -m {compress-only, compare-only, both} -d -p {none,both,compression,comparison} -f file -o name -s signatures_path
+python mmdect.py -h -a -m {compress-only, compare-only, both} -d -p {none,both,compression,comparison} -f file -o name -s signatures_path
 ```
 
 - -h or --help to display options.
@@ -36,7 +36,7 @@ python merubacc.py -h -a -m {compress-only, compare-only, both} -d -p {none,both
 For example:
 
 ```bash
-python merubacc.py -a
+python mmdect.py -a
 ```
 
 ## Uses
@@ -61,7 +61,7 @@ You can output the result in Intel syntax or in ATT syntax. By default, ATT synt
 For example:
 
 ```bash
-python merubacc.py --file=examples\passwddump.txt --output=examples\test.txt --mode=compress-only
+python mmdect.py --file=examples\passwddump.txt --output=examples\test.txt --mode=compress-only
 ```
 
 ### Comparison
@@ -81,7 +81,7 @@ Both signatures type can be compared if -c / --compare_both argument is specifie
 For example:
 
 ```bash
-python merubacc.py -c --file=examples\passwddump.txt --signatures=example_signatures/ --mode=compare-only
+python mmdect.py -c --file=examples\passwddump.txt --signatures=example_signatures/ --mode=compare-only
 ```
 
 ## How to make Prolog signatures

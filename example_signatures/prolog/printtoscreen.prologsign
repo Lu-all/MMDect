@@ -1,4 +1,4 @@
-Print to screen
+Prints to screen
 mov(reg(rdx), reg(rax)),
 mov(reg(Reg),imm('0x1')),
 mov(reg(rdi),imm('0x1')),

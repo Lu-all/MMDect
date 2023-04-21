@@ -1,3 +1,5 @@
+import random
+
 from colorama import Fore, Style
 
 
@@ -28,4 +30,15 @@ def print_warn(text: str, silent: bool) -> None:
 
 def print_banner(text: str, silent: bool) -> None:
     if not silent:
-        print(f"{Fore.LIGHTBLACK_EX}", text, f"{Style.RESET_ALL}")
+        colours = {
+            1: Fore.RED,
+            2: Fore.GREEN,
+            3: Fore.BLUE,
+            4: Fore.YELLOW,
+            5: Fore.LIGHTBLACK_EX,
+            6: Fore.CYAN,
+            7: Fore.MAGENTA,
+            8: Fore.RED
+        }
+        r = random.randint(1, len(colours))
+        print(f"{colours[r]}", text, f"{Style.RESET_ALL}")

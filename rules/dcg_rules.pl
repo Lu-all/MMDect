@@ -59,7 +59,16 @@ immediate(imm(I)) --> [A], {(nonvar(I);nonvar(A)),number_string(I,A)}.
 
 % MEM
 
-% mem('Mem') --> ["[Mem]"]
+% mem(Mem) --> ["[Mem]"]
+memory(mem(A)) -->
+    [S],{
+        nonvar(A),
+        number(A),
+        number_string(A,S1),
+        string_concat(S1,"]",S2),
+        string_concat("[",S2,S)
+        }.
+
 memory(mem(A)) -->
     [S],{
         nonvar(A),
@@ -69,6 +78,15 @@ memory(mem(A)) -->
         }.
 
 % mem(Mem) <-- ["[Mem]"]
+
+memory(mem(A)) -->
+    [S],{
+            nonvar(S),
+            string_concat("[",S1,S),
+            string_concat(M,"]",S1),
+            number_string(A,M)
+        }.
+
 memory(mem(A)) -->
     [S],{
             nonvar(S),
@@ -157,6 +175,22 @@ compare_firm(_, _, _, []).
 check([],[]).
 check(L, M):-
     L = M.
+
+compare_firms([], _,_, []).
+compare_firms(_,[],_,[]).
+
+
+compare_firms([Line], [Firm|Firms], [Name|Names], Positives):-
+    compare_firms([Line], Firms, Names, New_positives),
+    compare_firm(Line, Firm, Name, Positive),
+    append(New_positives, Positive, Positives),!.
+
+compare_firms([Line|Program], [Firm|Firms], [Name|Names], Positives):-
+    compare_firms(Program, [Firm|Firms], [Name|Names], New_positives_a),
+    compare_firms([Line|Program], Firms, Names, New_positives_b),
+    append(New_positives_a, New_positives_b, New_positives),
+    compare_firm([Line|Program], Firm, Name, Positive),
+    append(New_positives, Positive, Positives),!.
 
 %%%%%%%
 %Parse%
@@ -323,22 +357,6 @@ rules(Program_before, [N1,N2|Program_next], Result) :-
     append(Program_before, [N1], New_program_before),
     rules(New_program_before, [N2|Program_next], Result).
 
-compare_firms([], _,_, []).
-compare_firms(_,[],_,[]).
-
-
-compare_firms([Line], [Firm|Firms], [Name|Names], Positives):-
-    compare_firms([Line], Firms, Names, New_positives),
-    compare_firm(Line, Firm, Name, Positive),
-    append(New_positives, Positive, Positives),!.
-
-compare_firms([Line|Program], [Firm|Firms], [Name|Names], Positives):-
-    compare_firms(Program, [Firm|Firms], [Name|Names], New_positives_a),
-    compare_firms([Line|Program], Firms, Names, New_positives_b),
-    append(New_positives_a, New_positives_b, New_positives),
-    compare_firm([Line|Program], Firm, Name, Positive),
-    append(New_positives, Positive, Positives),!.
-
 
 %%%%%%%%%%
 %Examples%
@@ -354,17 +372,17 @@ etc_shadow_sign([
     ]).
 
 compressed_test([
-    mov(mem('123'), imm(_Imm)),
-    push(mem('123')),
+    mov(mem(123), imm(_Imm)),
+    push(mem(123)),
     push(imm(_Imm2)),
     mov(reg(r13), imm(_Imm3))
     ]).
 
 
 original_test([
-    mov(mem('123'),
+    mov(mem(123),
     imm(7239381865414537215)),
-    push(mem('123')),
+    push(mem(123)),
     push(imm(12))
     ]).
 

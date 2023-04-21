@@ -1,4 +1,4 @@
-Etc/shadow2
+Reference to etc/shadow (wildcard version)
 mov(reg(_Reg),imm('0x6477737361702FFF')),
 _,
 push(reg(_Reg)),

@@ -67,10 +67,12 @@ for option, argument in options:
             print_error("\t[!] Not valid -v or --verbose argument, defaulting to 'true'", silent)
 
 print_banner("""
-  __  __ ___ ___ _   _ ___   _   ___ ___ 
- |  \/  | __| _ \ | | | _ ) /_\ / __/ __|
- | |\/| | _||   / |_| | _ \/ _ \ (_| (__ 
- |_|  |_|___|_|_\\___/|___/_/ \_\___\___|
+ __ __  __ __  ___  ___  ___  ___ 
+|  \  \|  \  \| . \| __]|  _]|_ _|
+|     ||     || | || _] | [__ | | 
+|_|_|_||_|_|_||___/|___]`___/ |_| 
+                                  
+
 """, silent)
 prints("[+] Importing defaults", silent)
 python_exec = "none"

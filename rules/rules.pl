@@ -2,6 +2,8 @@
 %Basic types%
 %%%%%%%%%%%%%
 
+command([add, cmp, sub, and, xor, test, lea, shl, shr, mov, push, pop, call, jmp, je, jne, jz, jg, jge, jl, jle, ret, syscall]).
+
 % REG
 
 reg(eax).
@@ -42,9 +44,9 @@ imm(X) :-
 mem(X) :-
     nonvar(X), string_chars(X, X1), length(X1, L), nth0(0, X1, '['), nth1(L, X1, ']').
 mem(X) :-
-    var(X), 
-    random_between(0x1000, 0xffff, B), 
-    number_chars(B, B1), append(['['],B1, X1), append(X1, [']'], X2), 
+    var(X),
+    random_between(0x1000, 0xffff, B),
+    number_chars(B, B1), append(['['],B1, X1), append(X1, [']'], X2),
     atom_chars(X, X2).
 
 operation(Operand, O, Args):-
@@ -67,18 +69,26 @@ arg_type([],[]).
 
 arg_type([P|Ps],[R|Rs]):-
     arg_type(Ps,Rs),
-    asign(P,R),!.
+    assign(P,R),!.
 
 arg_type([P],[R]):-
-    asign(P,R).
+    assign(P,R).
 
-asign(P,R):-
+assign(P,R):-
     reg(P), R=reg(P),!.
 
-asign(P,R):-
+assign(P,R):-
     imm(P), R=imm(P),!.
 
-asign(P,R):-
+assign(P,R):-
+    mem(P),
+    string_chars(P,C),
+    delete(C, '[', C1),
+    delete(C1, ']', C2),
+    number_chars(A, C2),
+    R=mem(A),!.
+
+assign(P,R):-
     mem(P),
     string_chars(P,C),
     delete(C, '[', C1),
@@ -86,7 +96,11 @@ asign(P,R):-
     atom_chars(A, C2),
     R=mem(A),!.
 
-asign(P,P).
+assign(P,P):-
+    command(C),
+    nth0(_, C, P).
+
+assign(P,tag(P)).
 
 %%%%%%%%%
 %Compare%
@@ -105,8 +119,25 @@ compare_firm([PLine|Program], [Line|Lines],Name, Positive):-
 compare_firm(_, _, _, []).
 
 check([],[]).
+
 check(L, M):-
     L = M.
+
+compare_firms([], _,_, []).
+compare_firms(_,[],_,[]).
+
+
+compare_firms([Line], [Firm|Firms], [Name|Names], Positives):-
+    compare_firms([Line], Firms, Names, New_positives),
+    compare_firm(Line, Firm, Name, Positive),
+    append(New_positives, Positive, Positives),!.
+
+compare_firms([Line|Program], [Firm|Firms], [Name|Names], Positives):-
+    compare_firms(Program, [Firm|Firms], [Name|Names], New_positives_a),
+    compare_firms([Line|Program], Firms, Names, New_positives_b),
+    append(New_positives_a, New_positives_b, New_positives),
+    compare_firm([Line|Program], Firm, Name, Positive),
+    append(New_positives, Positive, Positives),!.
 
 %%%%%%%
 %Parse%
@@ -142,6 +173,12 @@ matrix_string_matrix_atom([S|Ss],[A|As]):-
     list_string_list_atom(S, A).
 
 % [i, a1, a2] <-> i(a1, a2)
+atom_functor([tag(X)], tag(Y)):-
+    atom_chars(X,C),
+    delete(C, ':', C1),
+    atom_chars(Y,C1),
+    !.
+
 atom_functor(X,Y):-
     Y =.. X.
 
@@ -261,22 +298,6 @@ rules(Program_before, [N1,N2|Program_next], Result) :-
     append(Program_before, [N1], New_program_before),
     rules(New_program_before, [N2|Program_next], Result).
 
-compare_firms([], _,_, []).
-compare_firms(_,[],_,[]).
-
-
-compare_firms([Line], [Firm|Firms], [Name|Names], Positives):-
-    compare_firms([Line], Firms, Names, New_positives),
-    compare_firm(Line, Firm, Name, Positive),
-    append(New_positives, Positive, Positives),!.
-
-compare_firms([Line|Program], [Firm|Firms], [Name|Names], Positives):-
-    compare_firms(Program, [Firm|Firms], [Name|Names], New_positives_a),
-    compare_firms([Line|Program], Firms, Names, New_positives_b),
-    append(New_positives_a, New_positives_b, New_positives),
-    compare_firm([Line|Program], Firm, Name, Positive),
-    append(New_positives, Positive, Positives),!.
-
 
 %%%%%%%%%%
 %Examples%
@@ -292,17 +313,17 @@ etc_shadow_sign([
     ]).
 
 compressed_test([
-    mov(mem('123'), imm(_Imm)),
-    push(mem('123')),
+    mov(mem(123), imm(_Imm)),
+    push(mem(123)),
     push(imm(_Imm2)),
     mov(reg(r13), imm(_Imm3))
     ]).
 
 
 original_test([
-    mov(mem('123'),
+    mov(mem(123),
     imm(7239381865414537215)),
-    push(mem('123')),
+    push(mem(123)),
     push(imm(12))
     ]).
 
