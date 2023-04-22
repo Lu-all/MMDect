@@ -1,0 +1,16 @@
+.global _start
+.text
+_start:
+jump3:
+jmp init
+mov r12, 10
+jump2:
+mov [0x123], 7
+mov r13, [0x123]
+jmp jump3
+jump1:
+init:
+sub r12, r13
+mov r13, r12
+shl r12, 8
+jmp jump2

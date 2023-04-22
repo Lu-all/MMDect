@@ -1,0 +1,9 @@
+Additional jumps (Prolog)
+tag(init),
+sub(reg(r12),reg(r13)),
+mov(reg(r13),reg(r12)),
+shl(reg(r12),imm(8)),
+mov(mem('0x123'),imm(7)),
+mov(reg(r13),mem('0x123')),
+jmp(tag(init)),
+mov(reg(r12),imm(10))

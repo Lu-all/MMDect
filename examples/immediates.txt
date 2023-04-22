@@ -1,0 +1,12 @@
+.global _start
+.text
+_start:
+sub r12, r13
+mov r13, r12
+shl r12, 80
+mov [0x123], 80
+init:
+mov r13, [291]
+cmp r13, 0x64
+jmp init
+mov r12, 0x64

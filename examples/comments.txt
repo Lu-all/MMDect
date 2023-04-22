@@ -1,0 +1,17 @@
+.global _start
+.text
+# Initial comment
+_start:
+# Comment 2
+sub r12, r13
+mov r13, r12
+#Comment3
+shl r12, 8 #abc
+mov [0x123], 7
+start_code:
+mov r13, [0x123]
+#Morecomments
+cmp r13, 10
+je start_code
+jne start_code
+mov r12, 10

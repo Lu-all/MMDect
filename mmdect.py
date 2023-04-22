@@ -7,7 +7,7 @@ from internal_functions.colored import print_error, print_pass, print_warn, prin
 from rules.modeHandler import compress_program, compress_and_compare_program, compare_program
 
 
-def merubacc_help() -> None:
+def mmdect_help() -> None:
     """
     Display help
     :return: None
@@ -70,9 +70,7 @@ print_banner("""
  __ __  __ __  ___  ___  ___  ___ 
 |  \  \|  \  \| . \| __]|  _]|_ _|
 |     ||     || | || _] | [__ | | 
-|_|_|_||_|_|_||___/|___]`___/ |_| 
-                                  
-
+|_|_|_||_|_|_||___/|___]`___/ |_|                                  
 """, silent)
 prints("[+] Importing defaults", silent)
 python_exec = "none"
@@ -125,7 +123,7 @@ for option, argument in options:
         multiple_input = True
     elif option in ['-h', '--help']:
         prints("[+] Help: ", silent)
-        merubacc_help()
+        mmdect_help()
 if exists(name):
     prints("[+] Reading program/s", silent)
     input_programs = read_programs(path=name, multiple_input=multiple_input, silent=silent)
