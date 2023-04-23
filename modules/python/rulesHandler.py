@@ -114,7 +114,7 @@ class RulesHandler:
         else:
             return []
 
-    def apply_all_rules_global(self, program: Program, experimental_rules=False):
+    def generate_python(self, program: Program, experimental_rules=False):
         """
         Apply all possible rules
         :return: None
