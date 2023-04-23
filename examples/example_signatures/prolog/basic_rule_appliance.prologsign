@@ -1,0 +1,5 @@
+Basic rule appliance (Prolog)
+mov(mem('123'),imm(_)),
+push(mem('123')),
+push(imm(_)),
+mov(reg(r13),imm(_))

@@ -2,6 +2,8 @@
 %Basic types%
 %%%%%%%%%%%%%
 
+command([add, cmp, sub, and, xor, test, lea, shl, shr, mov, push, pop, call, jmp, je, jne, jz, jg, jge, jl, jle, ret, syscall]).
+
 % REG
 
 reg(eax).
@@ -42,9 +44,9 @@ imm(X) :-
 mem(X) :-
     nonvar(X), string_chars(X, X1), length(X1, L), nth0(0, X1, '['), nth1(L, X1, ']').
 mem(X) :-
-    var(X), 
-    random_between(0x1000, 0xffff, B), 
-    number_chars(B, B1), append(['['],B1, X1), append(X1, [']'], X2), 
+    var(X),
+    random_between(0x1000, 0xffff, B),
+    number_chars(B, B1), append(['['],B1, X1), append(X1, [']'], X2),
     atom_chars(X, X2).
 
 operation(Operand, O, Args):-
@@ -67,18 +69,27 @@ arg_type([],[]).
 
 arg_type([P|Ps],[R|Rs]):-
     arg_type(Ps,Rs),
-    asign(P,R),!.
+    assign(P,R),!.
 
 arg_type([P],[R]):-
-    asign(P,R).
+    assign(P,R).
 
-asign(P,R):-
+assign(P,R):-
     reg(P), R=reg(P),!.
 
-asign(P,R):-
+assign(P,R):-
     imm(P), R=imm(P),!.
 
-asign(P,R):-
+assign(P,R):-
+    mem(P),
+    string_chars(P,C),
+    delete(C, '[', C1),
+    delete(C1, ']', C2),
+    string_chars(S, C2),
+    number_string(A, S),
+    R=mem(A),!.
+
+assign(P,R):-
     mem(P),
     string_chars(P,C),
     delete(C, '[', C1),
@@ -86,7 +97,11 @@ asign(P,R):-
     atom_chars(A, C2),
     R=mem(A),!.
 
-asign(P,P).
+assign(P,P):-
+    command(C),
+    nth0(_, C, P), !.
+
+assign(P,tag(P)).
 
 %%%%%%%%%
 %Compare%
@@ -98,15 +113,30 @@ compare_firm([PLine|_Program], [Line], Name, Positive):-
     check(PLine, Line),
     Positive = [Name].
 
-compare_firm([PLine|Program], [Line|Lines],Name, Positive):-
+compare_firm([PLine|Program], [Line|Lines], Name, Positive):-
     check(PLine, Line),
     compare_firm(Program, Lines, Name, Positive).
 
-compare_firm(_, _, _, []).
+apply_firm(Program, Signature, Name, Positive):-
+    compare_firm(Program, Signature, Name, Positive).
+
+apply_firm([_PLine|Program], Signature, Name, Positive):-
+    apply_firm(Program, Signature, Name, Positive).
+
+apply_firm(_, _, _, []).
 
 check([],[]).
+
 check(L, M):-
     L = M.
+
+compare_firms([], _,_, []).
+compare_firms(_,[],_,[]).
+
+compare_firms(Program, [Firm|Firms], [Name|Names], Positives):-
+    compare_firms(Program, Firms, Names, New_positives),
+    apply_firm(Program, Firm, Name, Positive),
+    append(New_positives, Positive, Positives),!.
 
 %%%%%%%
 %Parse%
@@ -142,6 +172,12 @@ matrix_string_matrix_atom([S|Ss],[A|As]):-
     list_string_list_atom(S, A).
 
 % [i, a1, a2] <-> i(a1, a2)
+atom_functor([tag(X)], tag(Y)):-
+    atom_chars(X,C),
+    delete(C, ':', C1),
+    atom_chars(Y,C1),
+    !.
+
 atom_functor(X,Y):-
     Y =.. X.
 
@@ -221,19 +257,19 @@ rule(f18_2, [jle(J), jg(J)], [jmp(J)]).
 %Main%
 %%%%%%
 
-compress_and_compare([],_,_,_,[]).
-compress_and_compare(_,_,[],_,[]).
-compress_and_compare(_,_,_,[],[]).
-compress_and_compare(Program, Compressed, Firms, Names, Positives):-
+generate_and_compare([],_,_,_,[]).
+generate_and_compare(_,_,[],_,[]).
+generate_and_compare(_,_,_,[],[]).
+generate_and_compare(Program, Generated, Firms, Names, Positives):-
 	parse(Program, Parsed), % Parse to Functors
-	rules([], Parsed, Compressed),% Apply rules
-    matrix_atom_array_functor(Array_program,Compressed),
+	rules([], Parsed, Generated),% Apply rules
+    matrix_atom_array_functor(Array_program,Generated),
     type(Array_program, Typed_program),
     matrix_atom_array_functor(Typed_program, Result),
     compare_firms(Result, Firms, Names, Positives).
 
-compress([],[]).
-compress(Program, Result) :-
+generate([],[]).
+generate(Program, Result) :-
 	parse(Program, Parsed), % Parse to Functors
 	rules([], Parsed, New_program), % Apply rules
     parse(Result, New_program).
@@ -260,130 +296,3 @@ rules(Program_before, [N1,N2|Program_next], Result) :-
 rules(Program_before, [N1,N2|Program_next], Result) :-
     append(Program_before, [N1], New_program_before),
     rules(New_program_before, [N2|Program_next], Result).
-
-compare_firms([], _,_, []).
-compare_firms(_,[],_,[]).
-
-
-compare_firms([Line], [Firm|Firms], [Name|Names], Positives):-
-    compare_firms([Line], Firms, Names, New_positives),
-    compare_firm(Line, Firm, Name, Positive),
-    append(New_positives, Positive, Positives),!.
-
-compare_firms([Line|Program], [Firm|Firms], [Name|Names], Positives):-
-    compare_firms(Program, [Firm|Firms], [Name|Names], New_positives_a),
-    compare_firms([Line|Program], Firms, Names, New_positives_b),
-    append(New_positives_a, New_positives_b, New_positives),
-    compare_firm([Line|Program], Firm, Name, Positive),
-    append(New_positives, Positive, Positives),!.
-
-
-%%%%%%%%%%
-%Examples%
-%%%%%%%%%%
-
-etc_shadow_sign([
-    mov(reg(Reg),imm(0x6477737361702FFF)),
-    shr(reg(Reg),imm(8)),
-    push(reg(Reg)),
-    mov(reg(Reg),imm(0xFFFFFFFF6374652F)),
-    shl(reg(Reg),imm(32)),
-    push(reg(Reg))
-    ]).
-
-compressed_test([
-    mov(mem('123'), imm(_Imm)),
-    push(mem('123')),
-    push(imm(_Imm2)),
-    mov(reg(r13), imm(_Imm3))
-    ]).
-
-
-original_test([
-    mov(mem('123'),
-    imm(7239381865414537215)),
-    push(mem('123')),
-    push(imm(12))
-    ]).
-
-test([
-    ["mov", "[123]","0x6477737361702FFF"],
-    ["push", "[123]"],
-    ["push", "12"],
-    ["pop", "r12"],
-    ["push", "r12"],
-    ["mov", "r13", "13"],
-    ["mov", "[12]", "0xFFFFFFFF6374652F"],
-    ["xor", "r12", "[12]"]
-    ]).
-
-test_special([
-    ["mov", "[123]","0x6477737361702FFF"],
-    ["push", "[123]"],
-    ["push", "12"],
-    ["pop", "r12"],
-    ["mov", "r13", "13"],
-    ["mov", "r12", "0xFFFFFFFF6374652F"],
-    ["xor", "rax", "rax"],
-    ["syscall"],
-    ["jne", "loop_read"],
-    ["close_file:"]
-    ]).
-
-test_long([
-    ["mov", "r12", "0x6477737361702FFF"],
-    ["shr", "r12", "8"],
-    ["mov", "[r13]", "r12"],
-    ["push", "[r13]"],
-    ["mov", "r12", "0xFFFFFFFF6374652F"],
-    ["shl", "r12", "32"],
-    ["push", "r12"],
-    ["mov", "rdi", "rsp"],
-    ["add", "rdi", "4"],
-    ["xor", "rsi", "rsi"],
-    ["xor", "rdx", "rdx"],
-    ["pop", "r15"],
-    ["push", "r15"],
-    ["push", "0x2"],
-    ["pop", "rax"],
-    ["syscall"],
-    ["push", "rax"],
-    ["pop", "r12"],
-    ["mov", "r13", "0x100"],
-    ["sub", "rsp", "r13"],
-    ["loop_read:"],
-    ["mov", "rdi", "r12"],
-    ["mov", "rsi", "rsp"],
-    ["mov", "rdx", "r13"],
-    ["xor", "rax", "rax"],
-    ["syscall"],
-    ["xor", "r14", "r14"],
-    ["cmp", "rax", "r14"],
-    ["je", "close_file"],
-    ["mov", "rdx", "rax"],
-    ["mov", "r14", "0x1"],
-    ["mov", "rdi", "0x1"],
-    ["mov", "rsi", "rsp"],
-    ["mov", "rax", "0x1"],
-    ["syscall"],
-    ["cmp", "rax", "r14"],
-    ["je", "loop_read"],
-    ["jne", "loop_read"],
-    ["close_file:"],
-    ["mov", "rdi", "r12"],
-    ["mov", "r14", "0x1"],
-    ["mov", "rax", "r14"],
-    ["syscall"],
-    ["xor", "rdi", "rdi"],
-    ["mov", "r14", "0x3c"],
-    ["mov", "rax", "r14"],
-    ["syscall"]
-    ]).
-
-
-/** <examples>
- ?- test_special(L), matrix_atom_array_functor(L, P), matrix_atom_array_functor(L1,P).
- ?- test(P), compress(P, Result).
- ?- test_long(P), etc_shadow_sign(R),compress_and_compare(P,C, [R], ['etc/shadow'], Positives).
- ?- test(P), etc_shadow_sign(R1), compressed_test(R2), original_test(R3), compress_and_compare(P, R, [R1,R2,R3], ['etc/shadow','test', 'original'], Positives), \+length(Positives, 0).
- */

@@ -1,0 +1,10 @@
+Immediates (Prolog)
+sub(reg(r12),reg(r13)),
+mov(reg(r13),reg(r12)),
+shl(reg(r12),imm(_I)),
+mov(mem('0x123'),imm(_I)),
+tag(init),
+mov(reg(r13),mem('0x123')),
+cmp(reg(r13),imm(100)),
+jmp(tag(init)),
+mov(reg(r12),imm(_I2))

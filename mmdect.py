@@ -4,10 +4,10 @@ from os.path import exists
 
 from internal_functions.IOHandler import write_program, read_programs
 from internal_functions.colored import print_error, print_pass, print_warn, print_banner, prints
-from rules.modeHandler import compress_program, compress_and_compare_program, compare_program
+from modules.modeHandler import generate_program, generate_and_compare_program, compare_program
 
 
-def merubacc_help() -> None:
+def mmdect_help() -> None:
     """
     Display help
     :return: None
@@ -19,39 +19,45 @@ def merubacc_help() -> None:
 
            "-v or --verbose to show output (true by default)\n"
 
-           "-m or --mode to specify mode between: compress-only (only execute compression module), compare-only"
-           " (only execute comparison module or both (execute both modules). Both is selected by default.\n"
-
            "-a or --att_syntax to write the output file in ATT syntax (Intel syntax is selected by default)\n"
 
-           "-p or --python to execute compression, comparison or both in python instead of prolog\n"
+           "-m or --mode to specify mode between: generate-only (only execute generation module), compare-only"
+           " (only execute comparison module or both (execute both modules). Both is selected by default.\n"
 
-           "-c or --compare-both to compare both Regex and Prolog signatures (overwrites -p python in comparison).\n"
+           "-p or --python to execute generation, comparison or both in python instead of prolog\n"
 
            "-f or --file to specify input file. If not specified, it will use examples/passwddump.txt as input\n"
 
-           "-o or --output to specify name of output file. If not specified, it will be <file>-compressed.<extension>\n"
+           "-o or --output to specify name of output file. If not specified, it will be <file>-generated.<extension>\n"
 
            "-O or --positives_output to write positives to a file. If not specified,"
            "positives will be printed in standard output (even in silent mode)"
 
            "-s or --signatures to specify path of signatures parent directory, which also enables compare step."
            "Rules for prolog calculation should have '.prologsign' extension, "
-           "while rules extension for comparison in python must be '.txt'. Python rules can be in regex format.\n",
+           "while rules extension for comparison in python must be '.txt'. Python rules can be in regex format.\n"
+
+           "-c or --compare-both to compare both Regex and Prolog signatures (overwrites -p python in comparison).\n"
+
+           "-M or --multiple_input to input multiple files, giving the path to the directory (it uses recursion) in the"
+           " -f parameter.\n"
+
+           "-P or --prolog to specify the use of DCG (dcg) or classic Prolog (classic). By default, DCG is used.\n",
            silent)
 
 
 silent = False
-example_path = "examples/passwddump.txt"
+example_path = "examples/example_programs/passwddump.txt"
 positives_file = False
+multiple_input = False
 command_args = sys.argv[1:]
 options: list[tuple[str, str]] = [('-f', example_path)]
 arguments: list[str] = [example_path]
 try:
-    options, arguments = getopt.getopt(command_args, "hatcvMp:f:o:O:s:m:",
+    options, arguments = getopt.getopt(command_args, "hatcvMp:f:o:O:s:m:P:",
                                        ["help", "att_syntax", "tag_replacement", "verbose", "compare-both",
                                         "multiple_input", "python=", "file=", "output=", "positives_output=",
-                                        "signatures=", "mode="])
+                                        "signatures=", "mode=", "prolog="])
 except getopt.GetoptError as error:
     print(error)
     sys.exit(2)
@@ -65,12 +71,15 @@ for option, argument in options:
             silent = True
         else:
             print_error("\t[!] Not valid -v or --verbose argument, defaulting to 'true'", silent)
+    elif option in ['-M', '--multiple_input']:
+        multiple_input = True
+        example_path = "examples/example_programs"
 
 print_banner("""
-  __  __ ___ ___ _   _ ___   _   ___ ___ 
- |  \/  | __| _ \ | | | _ ) /_\ / __/ __|
- | |\/| | _||   / |_| | _ \/ _ \ (_| (__ 
- |_|  |_|___|_|_\\___/|___/_/ \_\___\___|
+ __ __  __ __  ___  ___  ___  ___ 
+|  \  \|  \  \| . \| __]|  _]|_ _|
+|     ||     || | || _] | [__ | | 
+|_|_|_||_|_|_||___/|___]`___/ |_|                                  
 """, silent)
 prints("[+] Importing defaults", silent)
 python_exec = "none"
@@ -78,17 +87,17 @@ att_syntax = False
 tag_replacement = False
 default_output = True
 both_signatures = False
-multiple_input = False
+dcg = True
 mode = "both"
 positives = set()
 input_programs = []
 name: str = example_path
-name_output = example_path + "-compressed.txt"
-signatures_path = "example_signatures/"
+name_output = example_path + "-generated.txt"
+signatures_path = "examples/example_signatures/"
 prints("[-] Reading arguments", silent)
 for option, argument in options:
     if option in ['-p', '--python']:
-        if str(argument) not in ["none", "both", "compress", "compare"]:
+        if str(argument) not in ["none", "both", "generate", "compare"]:
             print_error("\t[!] Not valid -p or --python argument, defaulting to 'none'", silent)
         else:
             prints("\t[+] Python mode = " + str(argument), silent)
@@ -119,11 +128,16 @@ for option, argument in options:
     elif option in ['-f', '--file']:
         print_warn("\t[+] Input file / dir = " + str(argument), silent)
         name = str(argument)
-    elif option in ['-M', '--multiple_input']:
-        multiple_input = True
+    elif option in ['-P', '--prolog']:
+        if str(argument) not in ["dcg", "classic"]:
+            print_error("\t[!] Not valid -P or --prolog, defaulting to 'dcg'", silent)
+        else:
+            prints("\t[+] Prolog mode = " + str(argument), silent)
+            if argument == "classic":
+                dcg = False
     elif option in ['-h', '--help']:
         prints("[+] Help: ", silent)
-        merubacc_help()
+        mmdect_help()
 if exists(name):
     prints("[+] Reading program/s", silent)
     input_programs = read_programs(path=name, multiple_input=multiple_input, silent=silent)
@@ -134,7 +148,7 @@ if exists(name):
         name_output_array = name_output_array[1::len(name_output_array)]
         for cut in name_output_array:
             name_without_extension = name_without_extension + '.' + cut
-        name_without_extension = name_without_extension + "-compressed"
+        name_without_extension = name_without_extension + "-generated"
     else:
         name_output_array = name_output.split('.')
         extension = name_output_array[-1]
@@ -147,25 +161,27 @@ if exists(name):
         iteration = 0
         for program in input_programs:
             positives = positives.union(compare_program(program=program, path=signatures_path, python_exec=python_exec,
-                                                        both_signatures=both_signatures, iteration=iteration))
+                                                        both_signatures=both_signatures, iteration=iteration,
+                                                        dcg_prolog=dcg))
             iteration = iteration + 1
     else:
-        if mode == "compress-only":
-            prints("[-] Compressing", silent)
+        if mode == "generate-only":
+            prints("[-] Generating", silent)
             if len(input_programs) > 1:
                 print_warn(
-                    "Multiple input programs selected not supported for compression, defaulting to the first one found."
+                    "Multiple input programs selected not supported for generation, defaulting to the first one found."
                     , silent)
-            programs = compress_program(program=input_programs[0], python_exec=python_exec)
+            programs = generate_program(program=input_programs[0], python_exec=python_exec, dcg_prolog=dcg)
         else:
             if len(input_programs) > 1:
                 print_warn(
-                    "Multiple input programs selected not supported for compression, defaulting to the first one found."
+                    "Multiple input programs selected not supported for generation, defaulting to the first one found."
                     , silent)
-            programs, positives = compress_and_compare_program(program=input_programs[0], path=signatures_path,
-                                                               python_exec=python_exec, both_signatures=both_signatures)
+            programs, positives = generate_and_compare_program(program=input_programs[0], path=signatures_path,
+                                                               python_exec=python_exec, both_signatures=both_signatures,
+                                                               dcg_prolog=dcg)
         num_program = 1
-        prints("[+] Writing compressed programs", silent)
+        prints("[+] Writing generated programs", silent)
         for program in programs:
             prints("\t[-] Writing program v." + str(num_program), silent)
             name = name_without_extension + "-" + str(num_program) + "." + extension

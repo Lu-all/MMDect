@@ -1,7 +1,7 @@
-Etc/shadow2
+Reference to etc/shadow
 mov(reg(_Reg),imm('0x6477737361702FFF')),
-_,
+shr(reg(_Reg),imm('8')),
 push(reg(_Reg)),
 mov(reg(_Reg),imm('0xFFFFFFFF6374652F')),
-_,
+shl(reg(_Reg),imm('32')),
 push(reg(_Reg))

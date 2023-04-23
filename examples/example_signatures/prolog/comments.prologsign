@@ -1,0 +1,10 @@
+Comments and fake jumps (Prolog)
+sub(reg(r12),reg(r13)),
+mov(reg(r13),reg(r12)),
+shl(reg(r12),imm(8)),
+mov(mem('0x123'),imm(7)),
+tag(start_code),
+mov(reg(r13),mem('0x123')),
+cmp(reg(r13),imm(10)),
+jmp(tag(start_code)),
+mov(reg(r12),imm(10))
