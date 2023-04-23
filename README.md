@@ -13,17 +13,17 @@ Code based in [MetaSign](https://github.com/LabSPY-univr/MetaSign) metamorphic r
 ## How to use it
 
 ```bash
-python mmdect.py -h -a -m {compress-only, compare-only, both} -d -p {none,both,compression,comparison} -f file -o name -s signatures_path
+python mmdect.py -h -a -c -m {generate-only, compare-only, both} -p {none,both,generate,compare} -f file -o name -s signatures_path -P {dcg,classic}
 ```
 
 - -h or --help to display options.
 - -v or --verbose to show output (true by default).
 - -a or --att_syntax to write the output file in ATT syntax (Intel syntax is selected by default).
-- -m or --mode to specify mode between: compress-only (only execute compression module), compare-only (only execute
+- -m or --mode to specify mode between: generate-only (only execute generation module), compare-only (only execute
   comparison module or both (execute both modules). Both is selected by default.
-- -p or --python to execute compression, comparison or both in Python instead of Prolog (default value is none).
+- -p or --python to execute generate, compare or both in Python instead of Prolog (default value is none).
 - -f or --file to specify input file. If not specified, it will use examples/passwddump.txt as input.
-- -o or --output to specify name of output file. If not specified, it will be < file >-compressed.< extension >.
+- -o or --output to specify name of output file. If not specified, it will be < file >-generated.< extension >.
 - -O or --positives_output to write positives to a file. If not specified, positives will be printed in standard
   output (even in silent mode).
 - -s or --signatures to specify path of signatures parent directory, which also enables compare step. Rules for prolog
@@ -32,6 +32,7 @@ python mmdect.py -h -a -m {compress-only, compare-only, both} -d -p {none,both,c
 - -c or --compare-both to compare both Regex and Prolog signatures (overwrites -p python in comparison).
 - -M or --multiple_input to input multiple files, giving the path to the directory (it uses recursion) in the -f
   parameter.
+- -P or --prolog to specify the use of DCG (dcg) or classic Prolog (classic). By default, DCG is used.
 
 For example:
 
@@ -43,7 +44,7 @@ python mmdect.py -a
 
 It has two principal uses:
 
-### Compression
+### Generate new metamorphic programs
 
 This code can be used to reduce the lines of a program, improving its readability.
 Arguments are categorized in "Mem" (memory), "Imm" (immediate), "Reg" (register) or others.
@@ -54,20 +55,20 @@ When one or more consecutive lines match a rule, those lines are replaced to a s
 MOV Mem,Imm / PUSH Mem <--> PUSH Imm
 
 In python mode, only the shortest version will be put in a file. However, in default mode (prolog), each possible
-compression will be outputted.
+generation will be outputted.
 
 You can output the result in Intel syntax or in ATT syntax. By default, ATT syntax is selected.
 
 For example:
 
 ```bash
-python mmdect.py --file=examples\passwddump.txt --output=examples\test.txt --mode=compress-only
+python mmdect.py --file=examples\passwddump.txt --output=examples\test.txt --mode=generate-only
 ```
 
-### Comparison
+### Detect malware using signatures
 
 This code also can be used to compare instructions between a given program and signatures. If only-compare is not
-specified, each compressed version of a program obtained in compression step will be compared.
+specified, each generated version of a program obtained in generation step will be compared.
 
 In python mode, signatures will be compared using regex. Regex signatures must have '.txt' extension.
 In prolog mode (default), signatures will be compared as Functors. Prolog signatures must have '.prologsign' extension.
