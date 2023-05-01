@@ -1,7 +1,7 @@
-Reference to etc/shadow (Prolog)
+Reference to etc/passwd (Prolog & wildcard)
 mov(reg(_Reg),imm('0x6477737361702FFF')),
-shr(reg(_Reg),imm('8')),
+_,
 push(reg(_Reg)),
 mov(reg(_Reg),imm('0xFFFFFFFF6374652F')),
-shl(reg(_Reg),imm('32')),
+_,
 push(reg(_Reg))
