@@ -47,7 +47,7 @@ def mmdect_help() -> None:
 
 
 silent = False
-example_path = "examples/example_programs/passwddump.txt"
+example_path = "examples/example_programs/uc_passwddump.txt"
 positives_file = False
 multiple_input = False
 command_args = sys.argv[1:]

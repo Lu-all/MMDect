@@ -1,2 +1,2 @@
-Prints to screen (regex version)
+Prints to screen (Regex)
 .*('mov',\s*'((r\w\w?)|(e\w\w))',\s*'rax'.*'mov',\s*'((r\w\w?)|(e\w\w))',\s*'(0x)?1'.*'mov',\s*'rdi',\s*'(0x)?1'.*'mov',\s*'rsi',\s*'rsp'.*'mov',\s*'rax',\s*'(0x)?1'.*syscall).*
