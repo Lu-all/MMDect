@@ -8,31 +8,25 @@ MOV RULES
 
 G3   MOV Mem,Imm / PUSH Mem	<-->  PUSH Imm
 G4   MOV Mem,Reg / PUSH Mem   <-->  PUSH Reg
-E1  MOV Reg,Reg2 / PUSH Reg  <--> PUSH Reg2 ¿?
 
 G7   MOV Mem,Imm / OP Reg,Mem  <-->  OP Reg,Imm
 G8   MOV Mem2,Mem / OP Reg,Mem2  <-->  OP Reg,Mem
-E2  MOV Reg, Imm / OP Reg2,Reg <--> OP Reg2,Imm ¿?
 
 G10  MOV Mem,Reg / CALL Mem  <-->  CALL Reg
 G11  MOV Mem2,Mem / CALL Mem2  <-->  CALL Mem
-E3  MOV Reg2,Reg / CALL Reg2 <--> CALL Reg ¿?
 
 G12  MOV Mem,Reg / JMP Mem  <-->  JMP Reg
 G14  MOV Mem2,Mem / JMP Mem2  <-->  JMP Mem
-E4  MOV Reg2,Reg / JMP Reg2  <-->  JMP Reg ¿?
 
 POP RULES
 
 G5   POP Mem2 / MOV Mem,Mem2	<-->  POP Mem
 G6   POP Mem / MOV Reg,Mem  <-->  POP Reg
-E5  POP Reg / MOV Reg2,Reg  <-->  POP Reg2 ¿?
 
 G9   POP Mem / PUSH Mem  <-->  NOP
 F19  POP Reg / PUSH Reg <--> NOP
 
 G15  POP Mem / JMP Mem  <-->  RET
-E6  POP Reg / JMP Reg <--> RET ¿?
 
 CONDITIONAL BRANCH RULES
 
