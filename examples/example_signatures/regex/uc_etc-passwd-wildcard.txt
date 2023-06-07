@@ -1,0 +1,3 @@
+Reference to etc/passwd (Regex & wildcard)
+.*('mov',\s*'((r\w\w?)|(e\w\w))',\s*'0x6477737361702FFF'.*'push',\s*'\[\w+\]'.*'mov',\s*'((r\w\w?)|(e\w\w))',\s*'0xFFFFFFFF6374652F'.*'push',\s*'((r\w\w?)|(e\w\w))').*
+.*('mov',\s*'\[\w+\]',\s*'0x6477737361702FFF'.*'push',\s*'\[\w+\]'.*'mov',\s*'\[\w+\]',\s*'0xFFFFFFFF6374652F'.*'push',\s*'\[\w+\]').*
