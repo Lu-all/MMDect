@@ -149,7 +149,7 @@ command(syscall) --> ["syscall"].
 
 command(tag(A)) -->
     [T], {
-        nonvar(A),
+%        nonvar(A),
         atom(A),
         atom_string(A,T1),
         string_concat(T1,":",T)
@@ -157,7 +157,7 @@ command(tag(A)) -->
 
 command(tag(A)) -->
     [T],{
-            nonvar(T),
+%            nonvar(T),
             string(T),
             string_concat(T1,":",T),
             atom_string(A,T1)
@@ -330,6 +330,11 @@ rules(Result,[], Result).
 rules(Program_before,[Last], Result):-
     append(Program_before, [Last], Result).
 
+rules(Program_before, [N1|Program_next], Result) :-
+    rule(_, [N1], R),
+    append(Program_before, R, New_program_before),
+    rules(New_program_before, Program_next, Result).
+
 rules(Program_before, [N1,N2|Program_next], Result) :-
     rule(_, [N1,N2], R),
     append(Program_before, R, New_program_before),
@@ -338,3 +343,8 @@ rules(Program_before, [N1,N2|Program_next], Result) :-
 rules(Program_before, [N1,N2|Program_next], Result) :-
     append(Program_before, [N1], New_program_before),
     rules(New_program_before, [N2|Program_next], Result).
+
+
+/** <examples>
+?- generate([["mov", "[123]", "0x6477737361702FFF"], ["push", "[123]"], ["push", "12"], ["pop", "r12"], ["push", "r12"], ["mov", "r13", "13"], ["mov", "r12", "0xFFFFFFFF6374652F"], ["xor", "rax", "rax"], ["syscall"], ["jne", "loop_read"], ["close_file:"], ["syscall"]], R)
+*/

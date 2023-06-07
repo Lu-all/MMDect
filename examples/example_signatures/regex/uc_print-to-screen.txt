@@ -1,2 +1,2 @@
 Prints to screen (Regex)
-.*('mov',\s*'((r\w\w?)|(e\w\w))',\s*'rax'.*'mov',\s*'((r\w\w?)|(e\w\w))',\s*'(0x)?1'.*'mov',\s*'rdi',\s*'(0x)?1'.*'mov',\s*'rsi',\s*'rsp'.*'mov',\s*'rax',\s*'(0x)?1'.*syscall).*
+.*(\['mov',\s*'((r\w\w?)|(e\w\w))',\s*'rax'\],\s*\['mov',\s*'((r\w\w?)|(e\w\w))',\s*'(0x)?1'\],\s*\['mov',\s*'rdi',\s*'(0x)?1'\],\s*\['mov',\s*'rsi',\s*'rsp'\],\s*\['mov',\s*'rax',\s*'(0x)?1'\],\s*\['syscall'\]).*

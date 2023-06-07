@@ -96,12 +96,13 @@ def write_program(program: Program, name: str, att_syntax: bool, use_tag_replace
     f.close()
 
 
-def read_programs(path: str, multiple_input: bool, silent: bool) -> List[Program]:
+def read_programs(path: str, multiple_input: bool, entry_point: str, silent: bool) -> List[Program]:
     """
 
 
     :param path: Path where files are located
     :param multiple_input: True if multiple files are given as an input
+    :param entry_point: Name of custom entry point (_start by default)
     :param silent: True to hide output
     :return:  List of Programs transformed to intermediate language
     """
@@ -109,9 +110,9 @@ def read_programs(path: str, multiple_input: bool, silent: bool) -> List[Program
     if multiple_input:
         for filename in os.listdir(path):
             if filename.endswith(".txt"):
-                programs.append(read_program(path + "/" + filename, silent))
+                programs.append(read_program(path + "/" + filename, entry_point, silent))
     else:
-        programs.append(read_program(path, silent))
+        programs.append(read_program(path, entry_point, silent))
     if len(programs) == 0:
         print_error("Error: the given directory is empty or it has been an unexpected error reading files.\n"
                     "Warning: files must have .txt extension", silent)
@@ -119,10 +120,11 @@ def read_programs(path: str, multiple_input: bool, silent: bool) -> List[Program
     return programs
 
 
-def read_program(name: str, silent: bool, tag_replace_to_numbers=False) -> Program:
+def read_program(name: str, entry_point: str, silent: bool, tag_replace_to_numbers=False) -> Program:
     """
     Read file specified and parse it to program
     :param name: name of file where program is written
+    :param entry_point: Name of custom entry point (_start by default)
     :param silent: True to hide output
     :param tag_replace_to_numbers: True to use experimental tag substitution
     :return: program
@@ -163,7 +165,7 @@ def read_program(name: str, silent: bool, tag_replace_to_numbers=False) -> Progr
                         if (is_conditional_branch(line[0]) or is_branch(line[0])) and len(line) > 2:
                             line = [line[0], line[len(line) - 1]]
                         program.add_instruction(line)
-                elif line.find("_start") == 0:
+                elif line.find(entry_point) == 0:
                     program.add_to_header(line + "\n")
                     header_skipped = True
                 else:
