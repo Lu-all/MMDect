@@ -42,22 +42,24 @@ def mmdect_help() -> None:
            "-M or --multiple_input to input multiple files, giving the path to the directory (it uses recursion) in the"
            " -f parameter.\n"
 
-           "-P or --prolog to specify the use of DCG (dcg) or classic Prolog (classic). By default, DCG is used.\n",
+           "-P or --prolog to specify the use of DCG (dcg) or classic Prolog (classic). By default, DCG is used.\n"
+
+           "-e or --entry_point to specify name of entry point (_start is used by default)\n",
            silent)
 
 
 silent = False
-example_path = "examples/example_programs/passwddump.txt"
+example_path = "examples/example_programs/uc_passwddump.txt"
 positives_file = False
 multiple_input = False
 command_args = sys.argv[1:]
 options: list[tuple[str, str]] = [('-f', example_path)]
 arguments: list[str] = [example_path]
 try:
-    options, arguments = getopt.getopt(command_args, "hatcvMp:f:o:O:s:m:P:",
+    options, arguments = getopt.getopt(command_args, "hatcvMe:p:f:o:O:s:m:P:",
                                        ["help", "att_syntax", "tag_replacement", "verbose", "compare-both",
-                                        "multiple_input", "python=", "file=", "output=", "positives_output=",
-                                        "signatures=", "mode=", "prolog="])
+                                        "multiple_input", "entry_point=", "python=", "file=", "output=",
+                                        "positives_output=", "signatures=", "mode=", "prolog="])
 except getopt.GetoptError as error:
     print(error)
     sys.exit(2)
@@ -89,6 +91,7 @@ default_output = True
 both_signatures = False
 dcg = True
 mode = "both"
+entry_point = "_start"
 positives = set()
 input_programs = []
 name: str = example_path
@@ -135,12 +138,14 @@ for option, argument in options:
             prints("\t[+] Prolog mode = " + str(argument), silent)
             if argument == "classic":
                 dcg = False
+    elif option in ['-e', '--entry_point']:
+        entry_point = argument
     elif option in ['-h', '--help']:
         prints("[+] Help: ", silent)
         mmdect_help()
 if exists(name):
     prints("[+] Reading program/s", silent)
-    input_programs = read_programs(path=name, multiple_input=multiple_input, silent=silent)
+    input_programs = read_programs(path=name, multiple_input=multiple_input, silent=silent, entry_point=entry_point)
     if default_output:
         name_output_array = name.split('.')
         extension = name_output_array[-1]

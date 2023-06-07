@@ -1,4 +1,4 @@
-Reference to etc/shadow (wildcard version)
+Reference to etc/passwd (Prolog & wildcard)
 mov(reg(_Reg),imm('0x6477737361702FFF')),
 _,
 push(reg(_Reg)),

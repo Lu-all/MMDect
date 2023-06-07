@@ -33,6 +33,7 @@ python mmdect.py -h -a -c -m {generate-only, compare-only, both} -p {none,both,g
 - -M or --multiple_input to input multiple files, giving the path to the directory (it uses recursion) in the -f
   parameter.
 - -P or --prolog to specify the use of DCG (dcg) or classic Prolog (classic). By default, DCG is used.
+- -e or --entry_point to specify name of entry point (_start is used by default)
 
 For example:
 

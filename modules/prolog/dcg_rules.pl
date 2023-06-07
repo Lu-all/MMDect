@@ -330,6 +330,11 @@ rules(Result,[], Result).
 rules(Program_before,[Last], Result):-
     append(Program_before, [Last], Result).
 
+rules(Program_before, [N1|Program_next], Result) :-
+    rule(_, [N1], R),
+    append(Program_before, R, New_program_before),
+    rules(New_program_before, Program_next, Result).
+
 rules(Program_before, [N1,N2|Program_next], Result) :-
     rule(_, [N1,N2], R),
     append(Program_before, R, New_program_before),
