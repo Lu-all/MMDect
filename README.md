@@ -78,7 +78,7 @@ Both signatures type can be compared if -c / --compare_both argument is specifie
 
 | Regex signature                                   | Prolog signature                         |
 |---------------------------------------------------|------------------------------------------|
-| .* 'mov',\s*'[re]\w\w?',\s*'0x6477737361702FFF'.* | mov(reg(_Reg),imm('0x6477737361702FFF')) |
+| .* 'mov',\s*'(r\w\w?)',\s*'0x6477737361702FFF'.*  | mov(reg(_Reg),imm('0x6477737361702FFF')) |
 
 For example:
 
@@ -95,7 +95,7 @@ For example, `shr r12, 8` will be `shr(reg(r12), imm('8'))`.
 ### Types:
 
 - Register / reg(register): r12 <--> reg(r12)
-- Immediate / imm(immediate): 8 <--> imm(8)
+- Immediate / imm(immediate): 8 <--> imm('8')
 - Memory / mem('address'): \[r12] <--> mem('r12')
 - Tag / tag(name): close_file <--> tag(close_file)
 
@@ -104,11 +104,10 @@ For example, `shr r12, 8` will be `shr(reg(r12), imm('8'))`.
 A variable can be defined as V or _V (in this program, values of variables defined in signatures will not be displayed).
 For example:
 
-`mov(reg(_Reg),imm('0x6477737361702FFF')),
-op(shr,reg(_Reg),imm('8'))`
+`mov(reg(_Reg),imm('0x6477737361702FFF')),shr(reg(_Reg),imm('8'))`
 
 In this code, _Reg must have the same value in both occurrences.
-If the first _Reg is assigned the value r12, the second line must be `op(shr,reg(r12),imm('8'))` to valid the rule.
+If the first _Reg is assigned the value r12, the second line must be `shr(reg(r12),imm('8'))` to valid the rule.
 
 ### Wildcard:
 
@@ -116,8 +115,8 @@ A wildcard whose value will not necessarily be repeated later in the code can be
 For example:
 
 `mov(reg(_),imm('0x6477737361702FFF')),
-op(shr,reg(_),imm('8'))`
+shr(reg(_),imm('8'))`
 
 In this code, _ doesn't have to have the same value in both instances.
-If the first _ is assigned the value r12, the second line could be `op(shr,reg(r14),imm('8'))`
+If the first _ is assigned the value r12, the second line could be `shr(reg(r14),imm('8'))`
 and the rule would apply.
