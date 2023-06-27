@@ -158,9 +158,6 @@ if exists(name):
         name_output_array = name_output.split('.')
         extension = name_output_array[-1]
         name_without_extension = name_output_array[0]
-        name_output_array = name_output_array[1::len(name_output_array)]
-        for cut in name_output_array:
-            name_without_extension = name_without_extension + '.' + cut
     if mode == "compare-only":
         prints("[-] Comparing", silent)
         iteration = 0
