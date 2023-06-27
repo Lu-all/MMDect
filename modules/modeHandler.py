@@ -91,7 +91,7 @@ def generate_and_compare_program(program: Program, path: str, python_exec: str, 
     """
     positives = set()
     programs = generate_program(program=program, tag_replacement=tag_replacement, python_exec=python_exec,
-                                dcg_prolog=dcg_prolog)
+                                dcg_prolog=dcg_prolog, silent=silent)
     programs.append(program)
     iteration = 0
     for new_program in programs:

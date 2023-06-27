@@ -17,7 +17,7 @@ python mmdect.py -h -a -c -m {generate-only, compare-only, both} -p {none,both,g
 ```
 
 - -h or --help to display options.
-- -v or --verbose to show output (true by default).
+- -S or --silent to hide output. Only positives will be printed.
 - -a or --att_syntax to write the output file in ATT syntax (Intel syntax is selected by default).
 - -m or --mode to specify mode between: generate-only (only execute generation module), compare-only (only execute
   comparison module or both (execute both modules). Both is selected by default.

@@ -17,7 +17,7 @@ def mmdect_help() -> None:
            "Usage: \n\n"
            "-h or --help to display this guide\n\n"
 
-           "-v or --verbose to show output (true by default)\n\n"
+           "-S or --silent to hide output. Only positives will be printed.\n\n"
 
            "-a or --att_syntax to write the output file in ATT syntax (Intel syntax is selected by default)\n\n"
 
@@ -56,23 +56,17 @@ command_args = sys.argv[1:]
 options: list[tuple[str, str]] = [('-f', example_path)]
 arguments: list[str] = [example_path]
 try:
-    options, arguments = getopt.getopt(command_args, "hatcvMe:p:f:o:O:s:m:P:",
-                                       ["help", "att_syntax", "tag_replacement", "verbose", "compare-both",
+    options, arguments = getopt.getopt(command_args, "hatcSMe:p:f:o:O:s:m:P:",
+                                       ["help", "att_syntax", "tag_replacement", "silent", "compare-both",
                                         "multiple_input", "entry_point=", "python=", "file=", "output=",
                                         "positives_output=", "signatures=", "mode=", "prolog="])
 except getopt.GetoptError as error:
     print(error)
     sys.exit(2)
 for option, argument in options:
-    if option in ['-v', '--verbose']:
-        if str(argument).casefold() == 'true':
-            prints("\t[+] Verbose mode enabled", silent)
-            silent = False
-        elif str(argument).casefold() == 'false':
-            prints("\t[+] Silent mode enabled", silent)
-            silent = True
-        else:
-            print_error("\t[!] Not valid -v or --verbose argument, defaulting to 'true'", silent)
+    if option in ['-S', '--silent']:
+        prints("\t[+] Silent mode enabled", silent)
+        silent = True
     elif option in ['-M', '--multiple_input']:
         multiple_input = True
         example_path = "examples/example_programs"
@@ -170,7 +164,7 @@ if exists(name):
                 positives = positives.union(
                     compare_program(program=program, path=signatures_path, python_exec=python_exec,
                                     both_signatures=both_signatures, iteration=iteration,
-                                    dcg_prolog=dcg))
+                                    dcg_prolog=dcg, silent=silent))
                 iteration = iteration + 1
         else:
             if mode == "generate-only":
@@ -179,7 +173,8 @@ if exists(name):
                     print_warn(
                         "Multiple input programs selected not supported for generation, defaulting to the first one found."
                         , silent)
-                programs = generate_program(program=input_programs[0], python_exec=python_exec, dcg_prolog=dcg)
+                programs = generate_program(program=input_programs[0], python_exec=python_exec, dcg_prolog=dcg,
+                                            silent=silent)
             else:
                 if len(input_programs) > 1:
                     print_warn(
@@ -188,7 +183,7 @@ if exists(name):
                 programs, positives = generate_and_compare_program(program=input_programs[0], path=signatures_path,
                                                                    python_exec=python_exec,
                                                                    both_signatures=both_signatures,
-                                                                   dcg_prolog=dcg)
+                                                                   dcg_prolog=dcg, silent=silent)
             num_program = 1
             prints("[+] Writing generated programs", silent)
             for program in programs:
@@ -198,7 +193,7 @@ if exists(name):
                               program=program)
                 num_program = num_program + 1
         if len(positives) > 0:
-            if not positives_file or positives_file is None:
+            if not (positives_file or positives_file is None):
                 print_pass("Positives: " + str(positives), False)
             else:
                 try:
