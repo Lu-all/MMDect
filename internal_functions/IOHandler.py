@@ -6,7 +6,8 @@ from typing import List
 
 from internal_functions.colored import print_error
 from internal_functions.program import Program
-from internal_functions.utils import is_instruction, is_register, is_immediate, is_conditional_branch, is_branch
+from internal_functions.utils import is_instruction, is_register, is_immediate, is_conditional_branch, is_branch, \
+    is_memory_address
 
 
 def get_prolog_signatures(signatures_path: str) -> tuple[List[str], List[List[str]]]:
@@ -57,32 +58,48 @@ def write_program(program: Program, name: str, att_syntax: bool, use_tag_replace
     if use_tag_replacement:
         program.line_to_tags()
     f = open(name, 'w')
-    for line in program.header:
-        f.write(line)
     if att_syntax:
+        for line in program.header:
+            f.write(line.replace(';', '#').replace('_start', 'main'))
         for i in range(0, program.length()):
             if len(program.get_line(i)) >= 2:  # type: ignore
-                first_operand = ''
+                first_operand_prev = ''
+                first_operand = str(program.operand(i, 1))
                 if is_register(program.operand(i, 1)):  # type: ignore
-                    first_operand = "%"
+                    first_operand_prev = "%"
                 elif is_immediate(program, program.operand(i, 1)):  # type: ignore
-                    first_operand = "$"
+                    first_operand_prev = "$"
+                elif is_memory_address(program.operand(i, 1)):
+                    address = first_operand.split('[')[1].split(']')[0]
+                    if is_register(address):
+                        first_operand = "(" + "%" + address + ")"
+                    else:
+                        first_operand = "(" + "$" + address + ")"
                 if len(program.get_line(i)) == 3:  # type: ignore
-                    second_operand = ''
+                    second_operand_prev = ''
+                    second_operand = str(program.operand(i, 2))
                     if is_register(program.operand(i, 2)):  # type: ignore
-                        second_operand = "%"
+                        second_operand_prev = "%"
                     elif is_immediate(program, program.operand(i, 2)):  # type: ignore
-                        second_operand = "$"
-                    s = str(program.instruction(i)) + ' ' + second_operand + str(
-                        program.operand(i, 2)) + ', ' + first_operand + \
-                        str(program.operand(i, 1))
+                        second_operand_prev = "$"
+                    elif is_memory_address(program.operand(i, 1)):
+                        address = second_operand.split('[')[1].split(']')[0]
+                        if is_register(address):
+                            second_operand = "(" + "%" + address + ")"
+                        else:
+                            second_operand = "(" + "$" + address + ")"
+                    s = str(program.instruction(
+                        i)) + ' ' + second_operand_prev + second_operand + ', ' + first_operand_prev + \
+                        first_operand
                 else:
-                    s = str(program.instruction(i)) + ' ' + first_operand + str(program.operand(i, 1))
+                    s = str(program.instruction(i)) + ' ' + first_operand_prev + first_operand
             else:
                 s = str(program.instruction(i))
             f.write(s)
             f.write('\n')
     else:
+        for line in program.header:
+            f.write(line)
         for i in range(0, program.length()):
             if len(program.get_line(i)) == 2:  # type: ignore
                 s = str(program.instruction(i)) + ' ' + str(program.operand(i, 1))
@@ -135,13 +152,19 @@ def read_program(name: str, entry_point: str, silent: bool, tag_replace_to_numbe
             program_file = file.read().split("\n")
             header_skipped = False
             num_line = -1
+            comment_symbol = ';'
             for line in program_file:
                 if header_skipped:
-                    has_comment = line.find('#')
-                    if has_comment == 0:
+                    if line.find('#'):
+                        comment_symbol = '#'
+                        has_comment = True
+                    elif line.find(';'):
+                        comment_symbol = ';'
+                        has_comment = True
+                    if not has_comment:
                         continue
-                    elif has_comment > 0:
-                        line = line.split("#")[0].strip()
+                    elif has_comment:
+                        line = line.split(comment_symbol)[0].strip()
                     if line.isspace() or len(line) == 0:
                         continue
                     num_line = num_line + 1

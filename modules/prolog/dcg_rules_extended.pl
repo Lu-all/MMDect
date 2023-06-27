@@ -82,6 +82,14 @@ memory(mem(A)) -->
         string_concat("[",S2,S)
         }.
 
+memory(mem(A)) -->
+    [S],{
+       	random(0,0xffff, A),
+        atom_string(A,S1),
+        string_concat(S1,"]",S2),
+        string_concat("[",S2,S)
+        }.
+
 % mem(Mem) <-- ["[Mem]"]
 
 memory(mem(A)) -->
@@ -149,7 +157,7 @@ command(syscall) --> ["syscall"].
 
 command(tag(A)) -->
     [T], {
-%        nonvar(A),
+        nonvar(A),
         atom(A),
         atom_string(A,T1),
         string_concat(T1,":",T)
@@ -157,7 +165,7 @@ command(tag(A)) -->
 
 command(tag(A)) -->
     [T],{
-%            nonvar(T),
+            nonvar(T),
             string(T),
             string_concat(T1,":",T),
             atom_string(A,T1)
@@ -263,12 +271,17 @@ to_functor(X, Y) :-
 
 % PUSH rules
 rule(g1, [push(imm(Imm)), pop(reg(Reg))], [mov(reg(Reg), imm(Imm))]).
+rule(g1, [mov(reg(Reg), imm(Imm))], [push(imm(Imm)), pop(reg(Reg))]).
 rule(g2, [push(reg(Reg)), pop(reg(Reg2))], [mov(reg(Reg2), reg(Reg))]).
+rule(g2, [mov(reg(Reg2), reg(Reg))], [push(reg(Reg)), pop(reg(Reg2))]).
 rule(g13, [push(reg(Reg)), 'ret'], [jmp(reg(Reg))]).
+rule(g13, [jmp(reg(Reg))], [push(reg(Reg)), 'ret']).
 
 % MOV rules
 rule(g3, [mov(mem(Mem), imm(Imm)), push(mem(Mem))], [push(imm(Imm))]).
+rule(g3, [push(imm(Imm))], [mov(mem(Mem), imm(Imm)), push(mem(Mem))]).
 rule(g4, [mov(mem(Mem), reg(Reg)), push(mem(Mem))], [push(reg(Reg))]).
+rule(g4, [push(reg(Reg))], [mov(mem(Mem), reg(Reg)), push(mem(Mem))]).
 
 rule(g7, [mov(mem(Mem), imm(Imm)), Opi], [Opo]):-
     operation(Opi, O, [reg(Reg),mem(Mem)]),
@@ -279,26 +292,39 @@ rule(g8, [mov(mem(Mem2), mem(Mem)), Opi], [Opo]):-
     operation(Opo, O, [reg(Reg),mem(Mem)]).
 
 rule(g10, [mov(mem(Mem), reg(Reg)), call(mem(Mem))], [call(reg(Reg))]).
+rule(g10, [call(reg(Reg))], [mov(mem(Mem), reg(Reg)), call(mem(Mem))]).
 rule(g11, [mov(mem(Mem2), mem(Mem)), call(mem(Mem2))], [call(mem(Mem))]).
+rule(g11, [call(mem(Mem))], [mov(mem(Mem2), mem(Mem)), call(mem(Mem2))]).
 
 rule(g12, [mov(mem(Mem), reg(Reg)), jmp(mem(Mem))], [jmp(reg(Reg))]).
+rule(g12, [jmp(reg(Reg))], [mov(mem(Mem), reg(Reg)), jmp(mem(Mem))]).
 rule(g14, [mov(mem(Mem2), mem(Mem)), jmp(mem(Mem2))], [jmp(mem(Mem))]).
+rule(g14, [jmp(mem(Mem))], [mov(mem(Mem2), mem(Mem)), jmp(mem(Mem2))]).
 
 % POP rules
 rule(g5, [pop(mem(Mem2)), mov(mem(Mem), mem(Mem2))], [pop(mem(Mem))]).
+rule(g5, [pop(mem(Mem))], [pop(mem(Mem2)), mov(mem(Mem), mem(Mem2))]).
 rule(g6, [pop(mem(Mem)), mov(reg(Reg), mem(Mem))], [pop(reg(Reg))]).
+rule(g6, [pop(reg(Reg))], [pop(mem(Mem)), mov(reg(Reg), mem(Mem))]).
 
 rule(g9, [pop(mem(Mem)), push(mem(Mem))], []).
 rule(f19, [pop(reg(Reg)), push(reg(Reg))], []).
 rule(g15, [pop(mem(Mem)), jmp(mem(Mem))], [ret]).
+rule(g15,  [ret], [pop(mem(Mem)), jmp(mem(Mem))]).
 
 % CONDITIONAL BRANCH rules
 rule(f16, [je(J), jne(J)], [jmp(J)]).
+rule(f16, [jmp(J)], [je(J), jne(J)]).
 rule(f16_2, [jne(J), je(J)], [jmp(J)]).
+rule(f16_2, [jmp(J)], [jne(J), je(J)]).
 rule(f17, [jl(J), jge(J)], [jmp(J)]).
+rule(f17, [jmp(J)], [jl(J), jge(J)]).
 rule(f17_2, [jge(J), jl(J)], [jmp(J)]).
+rule(f17_2, [jmp(J)], [jge(J), jl(J)]).
 rule(f18, [jg(J), jle(J)], [jmp(J)]).
+rule(f18, [jmp(J)], [jg(J), jle(J)]).
 rule(f18_2, [jle(J), jg(J)], [jmp(J)]).
+rule(f18_2, [jmp(J)], [jle(J), jg(J)]).
 
 %%%%%%
 %Main%
@@ -346,5 +372,8 @@ rules(Program_before, [N1,N2|Program_next], Result) :-
 
 
 /** <examples>
+% 96 versions
 ?- generate([["mov", "[123]", "0x6477737361702FFF"], ["push", "[123]"], ["push", "12"], ["pop", "r12"], ["push", "r12"], ["mov", "r13", "13"], ["mov", "r12", "0xFFFFFFFF6374652F"], ["xor", "rax", "rax"], ["syscall"], ["jne", "loop_read"], ["close_file:"], ["syscall"]], R)
+% > 3700 versions
+?- generate([["mov", "r12", "0x6477737361702FFF"], ["shr", "r12", "8"], ["mov", "[r13]", "r12"], ["push", "[r13]"], ["mov", "r12", "0xFFFFFFFF6374652F"], ["shl", "r12", "32"], ["push", "r12"], ["mov", "rdi", "rsp"], ["add", "rdi", "4"], ["xor", "rsi", "rsi"], ["xor", "rdx", "rdx"], ["pop", "r15"], ["push", "r15"], ["push", "0x2"], ["pop", "rax"], ["syscall"], ["push", "rax"], ["pop", "r12"], ["mov", "r13", "0x100"], ["sub", "rsp", "r13"], ["loop_read:"], ["mov", "rdi", "r12"], ["mov", "rsi", "rsp"], ["mov", "rdx", "r13"], ["xor", "rax", "rax"], ["syscall"], ["xor", "r14", "r14"], ["cmp", "rax", "r14"], ["je", "close_file"], ["mov", "rdx", "rax"], ["mov", "r14", "0x1"], ["mov", "rdi", "0x1"], ["mov", "rsi", "rsp"], ["mov", "rax", "0x1"], ["syscall"], ["cmp", "rax", "r14"], ["je", "loop_read"], ["jne", "loop_read"], ["close_file:"], ["mov", "rdi", "r12"], ["mov", "r14", "0x1"], ["mov", "rax", "r14"], ["syscall"], ["xor", "rdi", "rdi"], ["mov", "r14", "0x3c"], ["mov", "rax", "r14"], ["syscall"]], R)
 */

@@ -325,7 +325,8 @@ class RulesHandler:
         :return: True if rule can be applied, False if else
         """
         if self._rule7_check(program_line, program):
-            new_line = [program.instruction(program_line + 1), program.operand(program_line + 1, 1),
+            new_line = [program.instruction(program_line + 1),
+                        program.operand(program_line + 1, 1),
                         program.operand(program_line, 2)]
             program.delete(program_line)
             program.delete(program_line)

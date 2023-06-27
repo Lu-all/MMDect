@@ -1,33 +1,33 @@
-# This code prints /etc/passwd file in stdout
+; This code prints /etc/passwd file in stdout
 .global _start
 .text
 _start:
 mov r12, 0x6477737361702FFF
-# Comment
+; Comment
 shr r12, 8
 mov [r13], r12
-push [r13] # Rule 3
+push [r13] ; Rule 3
 mov r12, 0xFFFFFFFF6374652F
 shl r12, 32
 push r12
 mov rdi, rsp
 add rdi, 4
-xor rsi, rsi # Rule 16
+xor rsi, rsi ; Rule 16
 xor rdx, rdx
 pop r15
-push r15 # Rule 9
+push r15 ; Rule 9
 push 0x2
-pop rax # Rule 1
+pop rax ; Rule 1
 syscall
 push rax
-pop r12 # Rule 2
+pop r12 ; Rule 2
 mov r13, 0x100
 sub rsp, r13
 loop_read:
 mov rdi, r12
 mov rsi, rsp
 mov rdx, r13
-xor rax, rax # Rule 16
+xor rax, rax ; Rule 16
 syscall
 xor r14, r14
 cmp rax, r14
@@ -40,7 +40,7 @@ mov rax, 0x1
 syscall
 cmp rax, r14
 je  loop_read
-jne loop_read # Rule 17
+jne loop_read ; Rule 17
 close_file:
 mov rdi, r12
 mov r14, 0x1
